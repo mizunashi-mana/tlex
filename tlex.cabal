@@ -119,6 +119,7 @@ library
         Language.Lexer.Tlex.Machine.DFA
         Language.Lexer.Tlex.Pipeline.Pattern2Nfa
         Language.Lexer.Tlex.Pipeline.Nfa2Dfa
+        Language.Lexer.Tlex.Data.CharMap
         Language.Lexer.Tlex.Data.CharSet
         Language.Lexer.Tlex.Data.Graph
     other-modules:

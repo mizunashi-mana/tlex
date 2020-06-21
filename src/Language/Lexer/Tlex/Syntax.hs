@@ -1,4 +1,5 @@
 module Language.Lexer.Tlex.Syntax (
+    Scanner (..),
     ScanRule (..),
     StateNum,
     Pattern (..),
@@ -8,7 +9,7 @@ module Language.Lexer.Tlex.Syntax (
     manyP,
     orP,
     AcceptPriority,
-    acceptPriority,
+    mostPriority,
     Accept (..),
     SemanticAction (..),
 ) where
@@ -17,6 +18,11 @@ import Language.Lexer.Tlex.Prelude
 
 import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 
+
+data Scanner s a = Scanner
+    { scannerName :: Text
+    , scannerRules :: [ScanRule s a]
+    }
 
 data ScanRule s a = ScanRule
     { scanRuleStartState :: [s]
@@ -28,9 +34,10 @@ data ScanRule s a = ScanRule
 type StateNum = Int
 
 newtype AcceptPriority = AcceptPriority Int
+    deriving (Eq, Show, Enum)
 
-acceptPriority :: Int -> AcceptPriority
-acceptPriority x = AcceptPriority x
+mostPriority :: AcceptPriority
+mostPriority = AcceptPriority 0
 
 data Accept s a = Accept
     { accPriority :: AcceptPriority

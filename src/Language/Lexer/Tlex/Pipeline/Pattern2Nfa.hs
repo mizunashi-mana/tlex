@@ -1,9 +1,13 @@
-module Language.Lexer.Tlex.Pipeline.Pattern2Nfa where
+module Language.Lexer.Tlex.Pipeline.Pattern2Nfa (
+    pattern2Nfa,
+    scanRule2Nfa,
+    scanner2Nfa,
+) where
 
 import Language.Lexer.Tlex.Prelude
 
-import Language.Lexer.Tlex.Syntax as Tlex
-import Language.Lexer.Tlex.Machine.NFA as NFA
+import qualified Language.Lexer.Tlex.Syntax as Tlex
+import qualified Language.Lexer.Tlex.Machine.NFA as NFA
 
 
 pattern2Nfa
@@ -36,3 +40,22 @@ scanRule2Nfa p b r = do
         { accPriority = p
         , accSemanticAction = Tlex.scanRuleSemanticAction r
         }
+
+scanner2Nfa :: [s] -> Tlex.Scanner s m -> NFA.NFABuilder s m ()
+scanner2Nfa ss Tlex.Scanner{ scannerRules } = do
+    is <- forM ss \s -> do
+        sn <- NFA.newStateNum
+        NFA.initial sn s
+        pure sn
+
+    let agg (p, bs) scanRule = do
+            b <- NFA.newStateNum
+            scanRule2Nfa p b scanRule
+            pure (succ p, b:bs)
+    (_, bs) <- foldM agg (Tlex.mostPriority, []) scannerRules
+
+    forM_ is \i ->
+        forM_ bs \b ->
+            NFA.epsilonTrans i b
+
+    pure ()

@@ -22,7 +22,7 @@ import qualified Language.Lexer.Tlex.Data.Graph as Graph
 
 
 data NFA s a = NFA
-    { nfaInitialStates :: [(Tlex.StateNum, s)]
+    { nfaInitials :: [(Tlex.StateNum, s)]
     , nfaTrans :: Array.Array Tlex.StateNum (NFAState s a)
     }
 
@@ -65,7 +65,10 @@ buildNFA :: NFABuilder s m () -> NFA s m
 buildNFA (NFABuilder builder) =
     let (is, s, m, ()) = builder [] 0 IntMap.empty
         arr = Array.array (0, s - 1) do IntMap.toAscList m
-    in epsilonClosed do NFA is arr
+    in epsilonClosed $ NFA
+        { nfaInitials = is
+        , nfaTrans = arr
+        }
 
 newStateNum :: NFABuilder s m Tlex.StateNum
 newStateNum = NFABuilder \is0 s0 m0 -> (is0, succ s0, m0, s0)
