@@ -10,7 +10,6 @@ module Language.Lexer.Tlex.Prelude.Core
         module Data.Functor,
         module Data.Ix,
         module Data.Kind,
-        module Data.MonoTraversable,
         module Data.Text,
     ) where
 
@@ -23,6 +22,5 @@ import           Data.Foldable                     hiding (foldl, foldr')
 import           Data.Functor
 import           Data.Ix                           (Ix)
 import           Data.Kind                         (Type)
-import           Data.MonoTraversable              hiding (omapM, oforM)
 import           Data.Text                         (Text)
 import           Prelude                           hiding (foldl, foldr, head, tail, String)

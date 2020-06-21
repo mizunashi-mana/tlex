@@ -82,14 +82,13 @@ common general
         ghc-prim,
         array,
         bytestring,
-        mono-traversable,
         prettyprinter,
         prettyprinter-ansi-terminal,
         text,
-        transformers,
         containers,
 
         -- project depends
+        charset,
         template-haskell,
 
     autogen-modules:
@@ -111,16 +110,17 @@ library
     exposed-modules:
         Language.Lexer.Tlex
         Language.Lexer.Tlex.TH
+        Language.Lexer.Tlex.DSL
         Language.Lexer.Tlex.Syntax
 
         -- internals
         Language.Lexer.Tlex.Prelude
         Language.Lexer.Tlex.Machine.NFA
+        Language.Lexer.Tlex.Machine.DFA
+        Language.Lexer.Tlex.Pipeline.Pattern2Nfa
+        Language.Lexer.Tlex.Pipeline.Nfa2Dfa
         Language.Lexer.Tlex.Data.CharSet
         Language.Lexer.Tlex.Data.Graph
-        Data.Range.DiscreteOrd
-        Data.Range.DiscreteRange
-        Data.Range.DiscreteRangeSet
     other-modules:
         Language.Lexer.Tlex.Prelude.Core
 

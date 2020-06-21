@@ -19,4 +19,5 @@ executable haskell2010-lexer
     build-depends:
         base,
         tlex,
+        charset,
         template-haskell,

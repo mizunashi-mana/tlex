@@ -6,19 +6,25 @@ module Language.Lexer.Tlex.Machine.NFA
         buildNFA,
         epsilonClosed,
         newStateNum,
-        pattern2Nfa,
+        epsilonTrans,
+        condTrans,
+        accept,
+        initial,
     ) where
 
 import Language.Lexer.Tlex.Prelude
 
 import qualified Data.IntMap.Strict as IntMap
 import qualified Data.Array as Array
-import qualified Language.Lexer.Tlex.Syntax as TlexSyntax
+import qualified Language.Lexer.Tlex.Syntax as Tlex
 import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 import qualified Language.Lexer.Tlex.Data.Graph as Graph
 
 
-newtype NFA = NFA (Array.Array TlexSyntax.StateNum NFAState)
+data NFA s = NFA
+    { nfaInitialStates :: [(Tlex.StateNum, s)]
+    , nfaTrans :: Array.Array Tlex.StateNum (NFAState s)
+    }
     deriving (Eq, Show)
 
 -- |
@@ -26,92 +32,63 @@ newtype NFA = NFA (Array.Array TlexSyntax.StateNum NFAState)
 -- TODO:
 -- * support polymorphic trans condition; only support charset now.
 --
-data NFAState = NState
-    { nstAccepts :: [TlexSyntax.Accept ()]
-    , nstEpsilonTrans :: [TlexSyntax.StateNum]
-    , nstTrans :: [(CharSet.CharSet, TlexSyntax.StateNum)]
+data NFAState s = NState
+    { nstAccepts :: [Tlex.Accept s]
+    , nstEpsilonTrans :: [Tlex.StateNum]
+    , nstTrans :: [(CharSet.CharSet, Tlex.StateNum)]
     }
     deriving (Eq, Show)
 
-epsilonClosed :: NFA -> NFA
-epsilonClosed (NFA arr) = NFA $ Array.listArray
-        do Array.bounds arr
-        do [ go v s | (v, s) <- Array.assocs arr ]
+epsilonClosed :: NFA s -> NFA s
+epsilonClosed nfa@NFA{ nfaTrans } = nfa
+    { nfaTrans = Array.listArray
+        do Array.bounds nfaTrans
+        do [ go v s | (v, s) <- Array.assocs nfaTrans ]
+    }
     where
         go v s = s
             { nstEpsilonTrans = gr Array.! v
             }
 
         gr = Graph.transClosure
-            do fmap nstEpsilonTrans arr
+            do fmap nstEpsilonTrans nfaTrans
 
 
-type MapNFA = IntMap.IntMap NFAState
+type MapNFA s = IntMap.IntMap (NFAState s)
 
-newtype NFABuilder a = NFABuilder
+newtype NFABuilder s a = NFABuilder
     { unNFABuilder
-        :: TlexSyntax.StateNum -> MapNFA
-        -> (TlexSyntax.StateNum, MapNFA, a)
+        :: [(Tlex.StateNum, s)] -> Tlex.StateNum -> MapNFA s
+        -> ([(Tlex.StateNum, s)], Tlex.StateNum, MapNFA s, a)
     }
     deriving Functor
 
-buildNFA :: NFABuilder () -> NFA
+buildNFA :: NFABuilder s () -> NFA s
 buildNFA (NFABuilder builder) =
-    let (s, m, ()) = builder 0 IntMap.empty
+    let (is, s, m, ()) = builder [] 0 IntMap.empty
         arr = Array.array (0, s - 1) do IntMap.toAscList m
-    in epsilonClosed do NFA arr
+    in epsilonClosed do NFA is arr
 
-newStateNum :: NFABuilder TlexSyntax.StateNum
-newStateNum = NFABuilder \s m -> (succ s, m, s)
+newStateNum :: NFABuilder s Tlex.StateNum
+newStateNum = NFABuilder \is0 s0 m0 -> (is0, succ s0, m0, s0)
 
-instance Applicative NFABuilder where
-    pure x = NFABuilder \s0 m0 -> (s0, m0, x)
-    NFABuilder bf <*> NFABuilder bx = NFABuilder \s0 m0 ->
-        let (s1, m1, f) = bf s0 m0
-            (s2, m2, x) = bx s1 m1
-        in (s2, m2, f x)
+instance Applicative (NFABuilder s) where
+    pure x = NFABuilder \is0 s0 m0 -> (is0, s0, m0, x)
+    NFABuilder bf <*> NFABuilder bx = NFABuilder \is0 s0 m0 ->
+        let (is1, s1, m1, f) = bf is0 s0 m0
+            (is2, s2, m2, x) = bx is1 s1 m1
+        in (is2, s2, m2, f x)
 
-instance Monad NFABuilder where
-    NFABuilder bx >>= k = NFABuilder \s0 m0 ->
-        let (s1, m1, x) = bx s0 m0 in unNFABuilder (k x) s1 m1
+instance Monad (NFABuilder s) where
+    NFABuilder bx >>= k = NFABuilder \is0 s0 m0 ->
+        let (is1, s1, m1, x) = bx is0 s0 m0
+        in unNFABuilder (k x) is1 s1 m1
 
-
-pattern2Nfa
-    :: TlexSyntax.StateNum -> TlexSyntax.StateNum
-    -> TlexSyntax.Pattern -> NFABuilder ()
-pattern2Nfa = go where
-    go b e = \case
-        TlexSyntax.Empty -> epsilonTrans b e
-        TlexSyntax.AnyOne -> condTrans b CharSet.anyone e
-        TlexSyntax.Range cs -> condTrans b cs e
-        p1 TlexSyntax.:^: p2 -> do
-            s <- newStateNum
-            pattern2Nfa b s p1
-            pattern2Nfa s e p2
-        p1 TlexSyntax.:|: p2 -> do
-            pattern2Nfa b e p1
-            pattern2Nfa b e p2
-        TlexSyntax.Maybe p -> do
-            pattern2Nfa b e p
-            epsilonTrans b e
-        TlexSyntax.Many p -> do
-            s <- newStateNum
-            epsilonTrans b s
-            pattern2Nfa s s p
-            epsilonTrans s e
-        TlexSyntax.Some p -> do
-            s1 <- newStateNum
-            s2 <- newStateNum
-            epsilonTrans b s1
-            pattern2Nfa s1 s2 p
-            epsilonTrans s2 s1
-            epsilonTrans s2 e
-
-epsilonTrans :: TlexSyntax.StateNum -> TlexSyntax.StateNum -> NFABuilder ()
+epsilonTrans :: Tlex.StateNum -> Tlex.StateNum -> NFABuilder s ()
 epsilonTrans sf st
     | sf == st  = pure ()
-    | otherwise = NFABuilder \s0 n0 ->
-        let n1 = addEpsTrans n0 in (s0, n1, ())
+    | otherwise = NFABuilder \is0 s0 n0 ->
+        let n1 = addEpsTrans n0 in (is0, s0, n1, ())
     where
         addEpsTrans n = case IntMap.lookup sf n of
             Nothing -> IntMap.insert sf
@@ -126,10 +103,9 @@ epsilonTrans sf st
                 do n
 
 condTrans
-    :: TlexSyntax.StateNum -> CharSet.CharSet -> TlexSyntax.StateNum
-    -> NFABuilder ()
-condTrans sf r st = NFABuilder \s0 n0 ->
-    let n1 = addCondTrans n0 in (s0, n1, ())
+    :: Tlex.StateNum -> CharSet.CharSet -> Tlex.StateNum -> NFABuilder s ()
+condTrans sf r st = NFABuilder \is0 s0 n0 ->
+    let n1 = addCondTrans n0 in (is0, s0, n1, ())
     where
         addCondTrans n = case IntMap.lookup sf n of
             Nothing -> IntMap.insert sf
@@ -140,5 +116,28 @@ condTrans sf r st = NFABuilder \s0 n0 ->
                     }
                 do n
             Just s@NState{ nstTrans } -> IntMap.insert sf
-                do s { nstTrans = (r, st):nstTrans }
+                do s
+                    { nstTrans = (r, st):nstTrans
+                    }
                 do n
+
+accept :: Tlex.StateNum -> Tlex.Accept s -> NFABuilder s ()
+accept s x = NFABuilder \is0 s0 n0 ->
+    let n1 = addAccept n0 in (is0, s0, n1, ())
+    where
+        addAccept n = case IntMap.lookup s n of
+            Nothing -> IntMap.insert s
+                do NState
+                    { nstAccepts = [x]
+                    , nstEpsilonTrans = []
+                    , nstTrans = []
+                    }
+                do n
+            Just ns@NState { nstAccepts } -> IntMap.insert s
+                do ns
+                    { nstAccepts = x:nstAccepts
+                    }
+                do n
+
+initial :: Tlex.StateNum -> s -> NFABuilder s ()
+initial s x = NFABuilder \is0 s0 n0 -> ((s, x):is0, s0, n0, ())
