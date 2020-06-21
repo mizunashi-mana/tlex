@@ -15,7 +15,7 @@ data LexerState
 initialRule
     :: Tlex.Pattern -> Tlex.SemanticAction LexerState a
     -> Tlex.LexerRuleBuilder LexerState a ()
-initialRule = Tlex.lexerRule Initial
+initialRule = Tlex.lexerRule [Initial]
 
 lexer :: Tlex.LexerDeclaration a
 lexer = Tlex.LexerDeclaration
@@ -31,8 +31,8 @@ lexerRules = do
 
     initialRule openComP action
     -- closeComP should be the head on nested comment mode to avoid conflicting.
-    Tlex.lexerRule NestedComment closeComP action
-    Tlex.lexerRule NestedComment anyWithNewlineP action
+    Tlex.lexerRule [NestedComment] closeComP action
+    Tlex.lexerRule [NestedComment] anyWithNewlineP action
 
     initialRule specialP action
 

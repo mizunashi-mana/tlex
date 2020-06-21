@@ -9,32 +9,33 @@ import Language.Lexer.Tlex.Prelude
 import qualified Language.Lexer.Tlex.Syntax as Tlex
 
 
-data LexerDeclaration m a where
-    LexerDeclaration :: forall s m a. Eq s =>
+data LexerDeclaration m where
+    LexerDeclaration :: forall s m. Eq s =>
         { initialState :: s
-        , rules :: LexerRuleBuilder s m a
+        , rules :: [Tlex.ScanRule s m]
         }
-        -> LexerDeclaration m a
+        -> LexerDeclaration m
 
 
 newtype LexerRuleBuilder s m a = LexerRuleBuilder
-    { unLexerRuleBuilder :: LexerRuleContext s m -> (LexerRuleContext s m, a) }
+    { unLexerRuleBuilder
+        :: [Tlex.ScanRule s m]
+        -> ([Tlex.ScanRule s m], a)
+    }
     deriving Functor
 
-data LexerRuleContext s m = LexerRuleContext
-
 instance Applicative (LexerRuleBuilder s m) where
-    pure x = LexerRuleBuilder \ctx -> (ctx, x)
+    pure x = LexerRuleBuilder \rs0 -> (rs0, x)
 
-    LexerRuleBuilder mf <*> LexerRuleBuilder mx = LexerRuleBuilder \ctx0 ->
-        let (ctx1, f) = mf ctx0
-            (ctx2, x) = mx ctx1
-        in (ctx2, f x)
+    LexerRuleBuilder mf <*> LexerRuleBuilder mx = LexerRuleBuilder \rs0 ->
+        let (rs1, f) = mf rs0
+            (rs2, x) = mx rs1
+        in (rs2, f x)
 
 instance Monad (LexerRuleBuilder s m) where
-    LexerRuleBuilder builder >>= k = LexerRuleBuilder \ctx0 ->
-        let (ctx1, x) = builder ctx0
-        in unLexerRuleBuilder (k x) ctx1
+    LexerRuleBuilder builder >>= k = LexerRuleBuilder \rs0 ->
+        let (rs1, x) = builder rs0
+        in unLexerRuleBuilder (k x) rs1
 
-lexRule :: s -> Tlex.Pattern -> Tlex.SemanticAction s m -> LexerRuleBuilder s m ()
-lexRule = undefined
+lexRule :: [s] -> Tlex.Pattern -> Tlex.SemanticAction s m -> LexerRuleBuilder s m ()
+lexRule ss p act = LexerRuleBuilder \rs0 -> (Tlex.ScanRule ss p act:rs0, ())

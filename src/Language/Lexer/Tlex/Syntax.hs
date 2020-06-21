@@ -1,4 +1,5 @@
 module Language.Lexer.Tlex.Syntax (
+    ScanRule (..),
     StateNum,
     Pattern (..),
     anyoneP,
@@ -6,6 +7,8 @@ module Language.Lexer.Tlex.Syntax (
     someP,
     manyP,
     orP,
+    AcceptPriority,
+    acceptPriority,
     Accept (..),
     SemanticAction (..),
 ) where
@@ -15,10 +18,24 @@ import Language.Lexer.Tlex.Prelude
 import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 
 
+data ScanRule s a = ScanRule
+    { scanRuleStartState :: [s]
+    , scanRulePattern :: Pattern
+    , scanRuleSemanticAction :: SemanticAction s a
+    }
+
+
 type StateNum = Int
 
-newtype Accept a = Accept a
-    deriving (Eq, Show)
+newtype AcceptPriority = AcceptPriority Int
+
+acceptPriority :: Int -> AcceptPriority
+acceptPriority x = AcceptPriority x
+
+data Accept s a = Accept
+    { accPriority :: AcceptPriority
+    , accSemanticAction :: SemanticAction s a
+    }
 
 
 -- |
@@ -58,5 +75,6 @@ orP :: [Pattern] -> Pattern
 orP = \case
   []   -> Empty
   p:ps -> foldr (:|:) p ps
+
 
 data SemanticAction s a = SemanticAction (Text -> a)
