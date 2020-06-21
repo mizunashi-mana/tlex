@@ -14,11 +14,12 @@ import Language.Lexer.Tlex.Prelude
 import qualified Data.IntMap.Strict as IntMap
 import qualified Data.Array as Array
 import qualified Language.Lexer.Tlex.Syntax as TlexSyntax
-import qualified Language.Lexer.Tlex.Data.CharSet as Tlex
+import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 import qualified Language.Lexer.Tlex.Data.Graph as Graph
 
 
 newtype NFA = NFA (Array.Array TlexSyntax.StateNum NFAState)
+    deriving (Eq, Show)
 
 -- |
 --
@@ -28,7 +29,7 @@ newtype NFA = NFA (Array.Array TlexSyntax.StateNum NFAState)
 data NFAState = NState
     { nstAccepts :: [TlexSyntax.Accept ()]
     , nstEpsilonTrans :: [TlexSyntax.StateNum]
-    , nstTrans :: [(Tlex.CharSet, TlexSyntax.StateNum)]
+    , nstTrans :: [(CharSet.CharSet, TlexSyntax.StateNum)]
     }
     deriving (Eq, Show)
 
@@ -81,13 +82,30 @@ pattern2Nfa
 pattern2Nfa = go where
     go b e = \case
         TlexSyntax.Empty -> epsilonTrans b e
-        TlexSyntax.AnyOne -> undefined
-        TlexSyntax.Range cs -> undefined cs
-        p1 TlexSyntax.:^: p2 -> undefined p1 p2
-        p1 TlexSyntax.:|: p2 -> undefined p1 p2
-        TlexSyntax.Maybe p -> undefined p
-        TlexSyntax.Some p -> undefined p
-        TlexSyntax.Many p -> undefined p
+        TlexSyntax.AnyOne -> condTrans b CharSet.anyone e
+        TlexSyntax.Range cs -> condTrans b cs e
+        p1 TlexSyntax.:^: p2 -> do
+            s <- newStateNum
+            pattern2Nfa b s p1
+            pattern2Nfa s e p2
+        p1 TlexSyntax.:|: p2 -> do
+            pattern2Nfa b e p1
+            pattern2Nfa b e p2
+        TlexSyntax.Maybe p -> do
+            pattern2Nfa b e p
+            epsilonTrans b e
+        TlexSyntax.Many p -> do
+            s <- newStateNum
+            epsilonTrans b s
+            pattern2Nfa s s p
+            epsilonTrans s e
+        TlexSyntax.Some p -> do
+            s1 <- newStateNum
+            s2 <- newStateNum
+            epsilonTrans b s1
+            pattern2Nfa s1 s2 p
+            epsilonTrans s2 s1
+            epsilonTrans s2 e
 
 epsilonTrans :: TlexSyntax.StateNum -> TlexSyntax.StateNum -> NFABuilder ()
 epsilonTrans sf st
@@ -107,3 +125,20 @@ epsilonTrans sf st
                 do s { nstEpsilonTrans = st:nstEpsilonTrans }
                 do n
 
+condTrans
+    :: TlexSyntax.StateNum -> CharSet.CharSet -> TlexSyntax.StateNum
+    -> NFABuilder ()
+condTrans sf r st = NFABuilder \s0 n0 ->
+    let n1 = addCondTrans n0 in (s0, n1, ())
+    where
+        addCondTrans n = case IntMap.lookup sf n of
+            Nothing -> IntMap.insert sf
+                do NState
+                    { nstAccepts = []
+                    , nstEpsilonTrans = []
+                    , nstTrans = [(r, st)]
+                    }
+                do n
+            Just s@NState{ nstTrans } -> IntMap.insert sf
+                do s { nstTrans = (r, st):nstTrans }
+                do n

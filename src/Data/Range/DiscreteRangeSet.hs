@@ -3,6 +3,8 @@ module Data.Range.DiscreteRangeSet (
     singleton,
     rangeSet,
     complement,
+    empty,
+    anyone,
     insert,
     elem,
     union,
@@ -33,6 +35,9 @@ complement = \case
 
 empty :: DiscreteOrd a => DiscreteRangeSet a
 empty = Straight mempty
+
+anyone :: DiscreteOrd a => DiscreteRangeSet a
+anyone = Complement mempty
 
 singleton :: DiscreteOrd a => a -> DiscreteRangeSet a
 singleton x = Straight do StRangeSet [discreteRange x x]

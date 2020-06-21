@@ -1,0 +1,3 @@
+packages:
+    tlex.cabal
+    example/*/*.cabal
