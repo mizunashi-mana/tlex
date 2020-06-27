@@ -79,16 +79,18 @@ common general
 
     build-depends:
         base,
-        ghc-prim,
-        array,
         bytestring,
+        text,
         prettyprinter,
         prettyprinter-ansi-terminal,
-        text,
-        containers,
 
         -- project depends
+        array,
         charset,
+        transformers,
+        containers,
+        hashable,
+        unordered-containers,
         template-haskell,
 
     autogen-modules:
@@ -115,6 +117,7 @@ library
 
         -- internals
         Language.Lexer.Tlex.Prelude
+        Language.Lexer.Tlex.Machine.State
         Language.Lexer.Tlex.Machine.NFA
         Language.Lexer.Tlex.Machine.DFA
         Language.Lexer.Tlex.Pipeline.Pattern2Nfa

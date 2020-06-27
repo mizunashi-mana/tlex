@@ -1,7 +1,6 @@
 module Language.Lexer.Tlex.Syntax (
     Scanner (..),
     ScanRule (..),
-    StateNum,
     Pattern (..),
     anyoneP,
     maybeP,
@@ -30,8 +29,6 @@ data ScanRule s a = ScanRule
     , scanRuleSemanticAction :: SemanticAction s a
     }
 
-
-type StateNum = Int
 
 newtype AcceptPriority = AcceptPriority Int
     deriving (Eq, Show, Enum)

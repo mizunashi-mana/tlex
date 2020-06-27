@@ -6,6 +6,7 @@ module Language.Lexer.Tlex.DSL (
 
 import Language.Lexer.Tlex.Prelude
 
+import           Data.List.NonEmpty
 import qualified Language.Lexer.Tlex.Syntax as Tlex
 
 
@@ -37,5 +38,5 @@ instance Monad (LexerRuleBuilder s m) where
         let (rs1, x) = builder rs0
         in unLexerRuleBuilder (k x) rs1
 
-lexRule :: [s] -> Tlex.Pattern -> Tlex.SemanticAction s m -> LexerRuleBuilder s m ()
-lexRule ss p act = LexerRuleBuilder \rs0 -> (Tlex.ScanRule ss p act:rs0, ())
+lexRule :: NonEmpty s -> Tlex.Pattern -> Tlex.SemanticAction s m -> LexerRuleBuilder s m ()
+lexRule (s :| ss) p act = LexerRuleBuilder \rs0 -> (Tlex.ScanRule (s:ss) p act:rs0, ())

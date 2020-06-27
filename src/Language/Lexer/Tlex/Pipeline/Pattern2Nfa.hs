@@ -7,11 +7,12 @@ module Language.Lexer.Tlex.Pipeline.Pattern2Nfa (
 import Language.Lexer.Tlex.Prelude
 
 import qualified Language.Lexer.Tlex.Syntax as Tlex
+import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Machine.NFA as NFA
 
 
 pattern2Nfa
-    :: Tlex.StateNum -> Tlex.StateNum -> Tlex.Pattern -> NFA.NFABuilder s m ()
+    :: MState.StateNum -> MState.StateNum -> Tlex.Pattern -> NFA.NFABuilder s m ()
 pattern2Nfa = go where
     go b e = \case
         Tlex.Empty -> NFA.epsilonTrans b e
@@ -30,8 +31,7 @@ pattern2Nfa = go where
             NFA.epsilonTrans s e
 
 scanRule2Nfa
-    :: Tlex.AcceptPriority -> Tlex.StateNum -> Tlex.ScanRule s m
-    -> NFA.NFABuilder s m ()
+    :: Tlex.AcceptPriority -> MState.StateNum -> Tlex.ScanRule s m -> NFA.NFABuilder s m ()
 scanRule2Nfa p b r = do
     e <- NFA.newStateNum
     pattern2Nfa b e do Tlex.scanRulePattern r
