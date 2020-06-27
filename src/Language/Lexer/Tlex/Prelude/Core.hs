@@ -12,6 +12,7 @@ module Language.Lexer.Tlex.Prelude.Core
         module Data.Functor.Compose,
         module Data.Ix,
         module Data.Kind,
+        module Data.Ord,
         module Data.Text,
     ) where
 
@@ -26,5 +27,6 @@ import           Data.Functor
 import           Data.Functor.Compose
 import           Data.Ix                           (Ix)
 import           Data.Kind                         (Type)
+import           Data.Ord                          (Down (..))
 import           Data.Text                         (Text)
 import           Prelude                           hiding (foldl, foldr, head, tail, String)

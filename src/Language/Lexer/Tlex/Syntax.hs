@@ -15,6 +15,7 @@ module Language.Lexer.Tlex.Syntax (
 
 import Language.Lexer.Tlex.Prelude
 
+import qualified Data.Hashable as Hashable
 import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 
 
@@ -32,6 +33,8 @@ data ScanRule s a = ScanRule
 
 newtype AcceptPriority = AcceptPriority Int
     deriving (Eq, Show, Enum)
+    deriving Ord via Down Int
+    deriving Hashable.Hashable via Int
 
 mostPriority :: AcceptPriority
 mostPriority = AcceptPriority 0
@@ -40,6 +43,15 @@ data Accept s a = Accept
     { accPriority :: AcceptPriority
     , accSemanticAction :: SemanticAction s a
     }
+
+instance Eq (Accept s a) where
+    Accept{ accPriority = p1 } == Accept{ accPriority = p2 } = p1 == p2
+
+instance Ord (Accept s a) where
+    Accept{ accPriority = p1 } `compare` Accept{ accPriority = p2 } = p1 `compare` p2
+
+instance Hashable.Hashable (Accept s a) where
+    hashWithSalt x Accept{ accPriority = p1 } = Hashable.hashWithSalt x p1
 
 
 -- |

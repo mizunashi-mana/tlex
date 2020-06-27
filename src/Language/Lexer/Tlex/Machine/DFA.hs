@@ -5,7 +5,7 @@ module Language.Lexer.Tlex.Machine.DFA (
     DFABuilderContext,
     buildDFA,
     newStateNum,
-    condTrans,
+    insertTrans,
     accept,
     initial,
 ) where
@@ -14,7 +14,6 @@ import Language.Lexer.Tlex.Prelude
 
 import qualified Data.Hashable                     as Hashable
 import qualified Data.HashMap.Strict               as HashMap
-import qualified Language.Lexer.Tlex.Data.CharSet  as CharSet
 import qualified Language.Lexer.Tlex.Data.CharMap  as CharMap
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
 import qualified Language.Lexer.Tlex.Machine.State as MState
@@ -70,25 +69,12 @@ newStateNum = do
         }
     pure nextStateNum
 
-condTrans
-    :: MState.StateNum -> CharSet.CharSet -> MState.StateNum -> DFABuilder s m ()
-condTrans sf r st = modify' \ctx0@DFABuilderContext{ dfaBCtxStateMap } -> ctx0
+insertTrans :: MState.StateNum -> DFAState s m -> DFABuilder s m ()
+insertTrans sf st = modify' \ctx0@DFABuilderContext{ dfaBCtxStateMap } -> ctx0
     { dfaBCtxStateMap = addCondTrans dfaBCtxStateMap
     }
     where
-        addCondTrans n = MState.insertOrUpdateMap sf
-            do DState
-                { dstAccepts = []
-                , dstTrans = insertCharSetMap CharMap.empty
-                }
-            do \s@DState{ dstTrans } -> s
-                { dstTrans = insertCharSetMap dstTrans
-                }
-            do n
-
-        insertCharSetMap m = foldl' insertCharMap m do CharSet.toList r
-
-        insertCharMap m c = CharMap.insert c st m
+        addCondTrans n = MState.insertMap sf st n
 
 accept :: MState.StateNum -> Tlex.Accept s m -> DFABuilder s m ()
 accept s x = modify' \ctx0@DFABuilderContext{ dfaBCtxStateMap } -> ctx0

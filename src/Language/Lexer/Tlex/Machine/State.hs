@@ -4,14 +4,19 @@ module Language.Lexer.Tlex.Machine.State (
 
     StateSet,
     emptyStateSet,
+    singletonSet,
+    listToSet,
+    stateSetToList,
 
     StateMap,
     emptyStateMap,
     insertOrUpdateMap,
+    insertMap,
 
     StateArray,
     totalStateMapToArray,
     mapArrayWithIx,
+    indexArray,
 
     StateGraph,
     stateArrayToGraph,
@@ -29,7 +34,8 @@ import qualified Data.Graph as Graph
 
 
 newtype StateNum = StateNum Int
-    deriving (Eq, Ord, Show, Enum, Ix, Hashable.Hashable)
+    deriving (Eq, Ord, Show, Enum, Ix)
+    deriving Hashable.Hashable via Int
 
 initialStateNum :: StateNum
 initialStateNum = StateNum 0
@@ -38,11 +44,20 @@ initialStateNum = StateNum 0
 newtype StateSet = StateSet IntSet.IntSet
     deriving (Eq, Show)
 
+instance Hashable.Hashable StateSet where
+    hashWithSalt s (StateSet x) = Hashable.hashWithSalt s do IntSet.toAscList x
+
 emptyStateSet :: StateSet
 emptyStateSet = StateSet IntSet.empty
 
-instance Hashable.Hashable StateSet where
-    hashWithSalt s (StateSet x) = Hashable.hashWithSalt s do IntSet.toAscList x
+singletonSet :: StateNum -> StateSet
+singletonSet (StateNum s) = StateSet do IntSet.singleton s
+
+listToSet :: [StateNum] -> StateSet
+listToSet ss = StateSet do IntSet.fromList do coerce ss
+
+stateSetToList :: StateSet -> [StateNum]
+stateSetToList (StateSet ss) = coerce do IntSet.toList ss
 
 
 newtype StateMap a = StateMap (IntMap.IntMap a)
@@ -50,6 +65,9 @@ newtype StateMap a = StateMap (IntMap.IntMap a)
 
 emptyStateMap :: StateMap a
 emptyStateMap = StateMap IntMap.empty
+
+insertMap :: StateNum -> a -> StateMap a -> StateMap a
+insertMap (StateNum k) x (StateMap m) = StateMap do IntMap.insert k x m
 
 insertOrUpdateMap :: StateNum -> a -> (a -> a) -> StateMap a -> StateMap a
 insertOrUpdateMap (StateNum k) ~dx ~uf (StateMap m) = StateMap case IntMap.lookup k m of
@@ -68,6 +86,9 @@ mapArrayWithIx :: (StateNum -> a -> a) -> StateArray a -> StateArray a
 mapArrayWithIx f (StateArray arr) = StateArray $ Array.listArray
     do Array.bounds arr
     do [ f (StateNum i) x | (i, x) <- Array.assocs arr ]
+
+indexArray :: StateArray a -> StateNum -> a
+indexArray (StateArray arr) (StateNum i) = arr Array.! i
 
 
 newtype StateGraph = StateGraph Graph.Graph

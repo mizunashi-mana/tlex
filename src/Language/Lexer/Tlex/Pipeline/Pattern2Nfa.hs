@@ -6,6 +6,8 @@ module Language.Lexer.Tlex.Pipeline.Pattern2Nfa (
 
 import Language.Lexer.Tlex.Prelude
 
+import qualified Data.HashMap.Strict as HashMap
+import qualified Data.Hashable as Hashable
 import qualified Language.Lexer.Tlex.Syntax as Tlex
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Machine.NFA as NFA
@@ -41,21 +43,27 @@ scanRule2Nfa p b r = do
         , accSemanticAction = Tlex.scanRuleSemanticAction r
         }
 
-scanner2Nfa :: [s] -> Tlex.Scanner s m -> NFA.NFABuilder s m ()
-scanner2Nfa ss Tlex.Scanner{ scannerRules } = do
-    is <- forM ss \s -> do
-        sn <- NFA.newStateNum
-        NFA.initial sn s
-        pure sn
-
-    let agg (p, bs) scanRule = do
+scanner2Nfa :: Eq s => Hashable.Hashable s => Tlex.Scanner s m -> NFA.NFABuilder s m ()
+scanner2Nfa Tlex.Scanner{ scannerRules } = foldM_
+    do \(p, bs, is) scanRule -> aggScanRule p bs is scanRule
+    do (Tlex.mostPriority, [], HashMap.empty)
+    do scannerRules
+    where
+        aggScanRule p0 bs0 is0 scanRule = do
             b <- NFA.newStateNum
-            scanRule2Nfa p b scanRule
-            pure (succ p, b:bs)
-    (_, bs) <- foldM agg (Tlex.mostPriority, []) scannerRules
+            scanRule2Nfa p0 b scanRule
+            is1 <- registerStartState is0 b do Tlex.scanRuleStartState scanRule
+            pure (succ p0, b:bs0, is1)
 
-    forM_ is \i ->
-        forM_ bs \b ->
-            NFA.epsilonTrans i b
-
-    pure ()
+        registerStartState is0 b ss = foldM
+            do \is s -> do
+                (is', sn) <- case HashMap.lookup s is of
+                    Just x  -> pure (is, x)
+                    Nothing -> do
+                        x <- NFA.newStateNum
+                        NFA.initial x s
+                        pure (HashMap.insert s x is, x)
+                NFA.epsilonTrans sn b
+                pure is'
+            do is0
+            do ss
