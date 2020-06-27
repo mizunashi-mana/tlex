@@ -74,6 +74,9 @@ insertOrUpdateMap (StateNum k) ~dx ~uf (StateMap m) = StateMap case IntMap.looku
     Nothing -> IntMap.insert k dx m
     Just x  -> IntMap.insert k (uf x) m
 
+lookupMap :: StateNum -> StateMap a -> Maybe a
+lookupMap (StateNum sn) (StateMap m) = IntMap.lookup sn m
+
 
 newtype StateArray a = StateArray (Array.Array Int a)
     deriving (Eq, Show, Functor)
