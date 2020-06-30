@@ -72,7 +72,7 @@ buildNFA builder =
         initialBCtx = NFABuilderContext
             { nfaBCtxInitials = []
             , nfaBCtxNextStateNum = MState.initialStateNum
-            , nfaBCtxStateMap = MState.emptyStateMap
+            , nfaBCtxStateMap = MState.emptyMap
             }
 
 newStateNum :: NFABuilder s m MState.StateNum

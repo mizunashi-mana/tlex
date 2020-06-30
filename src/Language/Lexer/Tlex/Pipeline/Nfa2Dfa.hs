@@ -6,11 +6,12 @@ import Language.Lexer.Tlex.Prelude
 
 import qualified Data.Hashable as Hashable
 import qualified Data.HashMap.Strict as HashMap
-import qualified Data.IntMap as IntMap
-import qualified Language.Lexer.Tlex.Data.CharMap as CharMap
+import qualified Language.Lexer.Tlex.Data.EnumMap as EnumMap
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Machine.NFA as NFA
 import qualified Language.Lexer.Tlex.Machine.DFA as DFA
+import qualified Language.Lexer.Tlex.Syntax as Tlex
+import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 
 
 nfa2Dfa :: Eq s => Hashable.Hashable s => NFA.NFA s a -> DFA.DFA s a
@@ -46,10 +47,6 @@ registerNewState nfaSs = do
         }
     pure dfaSn
 
-getOrNewState :: Eq s => Hashable.Hashable s => MState.StateSet -> Nfa2DfaM s m MState.StateNum
-getOrNewState nfaSs = do
-
-
 nfa2DfaM :: Eq s => Hashable.Hashable s => NFA.NFA s m -> Nfa2DfaM s m ()
 nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
     initials <- forM nfaInitials \(nfaSn, s) -> do
@@ -63,45 +60,80 @@ nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
         buildStateMap = \case
             []                   -> pure ()
             (dfaSn, nfaSs):rest0 -> do
-                (rest1, dst) <- buildDFAState dfaSn nfaSs rest0
+                (rest1, dst) <- buildDFAState nfaSs rest0
                 liftBuilderOp do DFA.insertTrans dfaSn dst
                 buildStateMap rest1
 
-        buildDFAState dfaSn nfaSs rest0 = do
-            (accs1, trans1) <- foldM
-                do \(accs, trans) nfaSn -> do
+        buildDFAState nfaSs0 rest0 = do
+            (accs1, trans1, otherTrans1) <- foldM
+                do \(accs, trans, otherTrans) nfaSn ->
                     let nfaState = nfaTrans `MState.indexArray` nfaSn
                         accs' = foldl'
-                            do \m acc -> IntMap.insert
-                                do Tlex.accPriority acc
-                                do acc
-                                do m
-                            do accs
-                            do NFA.nstAccepts nfaState
-                        trans' = foldl' insertTrans trans do NFA.nstTrans nfaState
-                    in pure (accs', trans')
-                do (IntMap.empty, CharMap.empty)
-                do MState.stateSetToList nfaSs
+                                do \m acc -> EnumMap.insert
+                                    do Tlex.accPriority acc
+                                    do acc
+                                    do m
+                                do accs
+                                do NFA.nstAccepts nfaState
+                        (trans', otherTrans') = foldl' insertTrans (trans, otherTrans)
+                                                    do NFA.nstTrans nfaState
+                    in pure (accs', trans', otherTrans')
+                do (EnumMap.empty, EnumMap.empty, MState.emptySet)
+                do MState.setToList nfaSs0
 
-            (rest1, trans2) <- foldM
-                do \(rest, trans) (c, nfaSs) -> do
+            let getOrRegisterNfaSs nfaSs rest = do
                     ctx0 <- get
-                    let nfa2DfaCtxStateMap = nfa2DfaCtxStateMap ctx0
-                    (rest', dfaSn) <- case HashMap.lookup nfaSs nfa2DfaCtxStateMap of
+                    let stateMap = nfa2DfaCtxStateMap ctx0
+                    case HashMap.lookup nfaSs stateMap of
                         Just dfaSn -> pure (rest, dfaSn)
                         Nothing -> do
                             dfaSn <- registerNewState nfaSs
-                            ((dfaSn, nfaSs):rest, dfaSn)
-                    pure (rest', CharMap.insert c dfaSn trans)
-                do (rest0, CharMap.empty)
-                do CharMap.assocs trans1
+                            pure ((dfaSn, nfaSs):rest, dfaSn)
+
+            (rest1, trans2) <- foldM
+                do \(rest, trans) (c, nfaSs) -> do
+                    (rest', dfaSn) <- getOrRegisterNfaSs nfaSs rest
+                    pure (rest', EnumMap.insert c dfaSn trans)
+                do (rest0, EnumMap.empty)
+                do EnumMap.assocs trans1
+
+            (rest2, otherTrans2) <- getOrRegisterNfaSs otherTrans1 rest1
 
             pure
-                ( rest1
+                ( rest2
                 , DFA.DState
-                    { dstAccepts = [ acc | (_, acc) <- IntMap.toDescList accs1 ]
+                    { dstAccepts = [ acc | (_, acc) <- EnumMap.toDescList accs1 ]
                     , dstTrans = trans2
+                    , dstOtherTrans = Just otherTrans2
                     }
                 )
 
-        insertTrans trans (r, sn) = undefined trans r sn
+        insertTrans (trans0, otherTrans0) (r, sn) = case CharSet.toElements r of
+            CharSet.StraightChars cs ->
+                let ~newTrans = MState.insertSet sn otherTrans0
+                    trans1 = foldl'
+                        do \trans c -> EnumMap.insertOrUpdate c
+                            do newTrans
+                            do \ss -> MState.insertSet sn ss
+                            do trans
+                        do trans0
+                        do cs
+                in (trans1, otherTrans0)
+            CharSet.ComplementChars cs ->
+                let (diffTrans1, trans1) = foldl'
+                                            do \(diffTrans, trans) c ->
+                                                ( EnumMap.delete c diffTrans
+                                                , EnumMap.insertOrUpdate c
+                                                    MState.emptySet
+                                                    id
+                                                    trans
+                                                )
+                                            do (trans0, trans0)
+                                            do cs
+                    trans2 = EnumMap.foldlWithKey'
+                                do \trans c ss -> EnumMap.insert c
+                                    do MState.insertSet sn ss
+                                    do trans
+                                do trans1
+                                do diffTrans1
+                in (trans2, MState.insertSet sn otherTrans0)

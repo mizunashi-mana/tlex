@@ -14,7 +14,7 @@ import Language.Lexer.Tlex.Prelude
 
 import qualified Data.Hashable                     as Hashable
 import qualified Data.HashMap.Strict               as HashMap
-import qualified Language.Lexer.Tlex.Data.CharMap  as CharMap
+import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
 import qualified Language.Lexer.Tlex.Machine.State as MState
 
@@ -31,7 +31,8 @@ data DFA s a = DFA
 --
 data DFAState s a = DState
     { dstAccepts :: [Tlex.Accept s a]
-    , dstTrans :: CharMap.CharMap MState.StateNum
+    , dstTrans :: EnumMap.EnumMap Char MState.StateNum
+    , dstOtherTrans :: Maybe MState.StateNum
     }
 
 
@@ -57,7 +58,7 @@ buildDFA builder =
         initialBCtx = DFABuilderContext
             { dfaBCtxInitials = HashMap.empty
             , dfaBCtxNextStateNum = MState.initialStateNum
-            , dfaBCtxStateMap = MState.emptyStateMap
+            , dfaBCtxStateMap = MState.emptyMap
             }
 
 newStateNum :: DFABuilder s m MState.StateNum
@@ -84,7 +85,8 @@ accept s x = modify' \ctx0@DFABuilderContext{ dfaBCtxStateMap } -> ctx0
         addAccept n = MState.insertOrUpdateMap s
             do DState
                 { dstAccepts = [x]
-                , dstTrans = CharMap.empty
+                , dstTrans = EnumMap.empty
+                , dstOtherTrans = Nothing
                 }
             do \ds@DState { dstAccepts } -> ds
                 { dstAccepts = x:dstAccepts

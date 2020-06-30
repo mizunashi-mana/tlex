@@ -111,9 +111,9 @@ library
         src
     exposed-modules:
         Language.Lexer.Tlex
-        Language.Lexer.Tlex.TH
-        Language.Lexer.Tlex.DSL
         Language.Lexer.Tlex.Syntax
+        Language.Lexer.Tlex.Syntax.DSL
+        Language.Lexer.Tlex.Output.TH
 
         -- internals
         Language.Lexer.Tlex.Prelude
@@ -122,9 +122,11 @@ library
         Language.Lexer.Tlex.Machine.DFA
         Language.Lexer.Tlex.Pipeline.Pattern2Nfa
         Language.Lexer.Tlex.Pipeline.Nfa2Dfa
-        Language.Lexer.Tlex.Data.CharMap
+        Language.Lexer.Tlex.Data.EnumSet
+        Language.Lexer.Tlex.Data.EnumMap
         Language.Lexer.Tlex.Data.CharSet
         Language.Lexer.Tlex.Data.Graph
+
     other-modules:
         Language.Lexer.Tlex.Prelude.Core
 

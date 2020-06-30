@@ -3,15 +3,18 @@ module Language.Lexer.Tlex.Machine.State (
     initialStateNum,
 
     StateSet,
-    emptyStateSet,
+    emptySet,
     singletonSet,
     listToSet,
-    stateSetToList,
+    setToList,
+    nullSet,
+    insertSet,
 
     StateMap,
-    emptyStateMap,
+    emptyMap,
     insertOrUpdateMap,
     insertMap,
+    lookupMap,
 
     StateArray,
     totalStateMapToArray,
@@ -47,24 +50,30 @@ newtype StateSet = StateSet IntSet.IntSet
 instance Hashable.Hashable StateSet where
     hashWithSalt s (StateSet x) = Hashable.hashWithSalt s do IntSet.toAscList x
 
-emptyStateSet :: StateSet
-emptyStateSet = StateSet IntSet.empty
+emptySet :: StateSet
+emptySet = StateSet IntSet.empty
 
 singletonSet :: StateNum -> StateSet
 singletonSet (StateNum s) = StateSet do IntSet.singleton s
 
+insertSet :: StateNum -> StateSet -> StateSet
+insertSet (StateNum s) (StateSet ss) = StateSet do IntSet.insert s ss
+
 listToSet :: [StateNum] -> StateSet
 listToSet ss = StateSet do IntSet.fromList do coerce ss
 
-stateSetToList :: StateSet -> [StateNum]
-stateSetToList (StateSet ss) = coerce do IntSet.toList ss
+setToList :: StateSet -> [StateNum]
+setToList (StateSet ss) = coerce do IntSet.toList ss
+
+nullSet :: StateSet -> Bool
+nullSet (StateSet ss) = IntSet.null ss
 
 
 newtype StateMap a = StateMap (IntMap.IntMap a)
     deriving (Eq, Show, Functor)
 
-emptyStateMap :: StateMap a
-emptyStateMap = StateMap IntMap.empty
+emptyMap :: StateMap a
+emptyMap = StateMap IntMap.empty
 
 insertMap :: StateNum -> a -> StateMap a -> StateMap a
 insertMap (StateNum k) x (StateMap m) = StateMap do IntMap.insert k x m

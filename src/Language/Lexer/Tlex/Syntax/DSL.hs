@@ -1,4 +1,4 @@
-module Language.Lexer.Tlex.DSL (
+module Language.Lexer.Tlex.Syntax.DSL (
     LexerDeclaration (..),
     LexerRuleBuilder,
     lexRule,

@@ -21,6 +21,7 @@ import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 
 data Scanner s a = Scanner
     { scannerName :: Text
+    , scannerInitialState :: s
     , scannerRules :: [ScanRule s a]
     }
 
