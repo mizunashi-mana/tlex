@@ -37,8 +37,8 @@ import qualified Data.Graph as Graph
 
 
 newtype StateNum = StateNum Int
-    deriving (Eq, Ord, Show, Enum, Ix)
-    deriving Hashable.Hashable via Int
+    deriving (Eq, Ord, Show, Ix)
+    deriving (Hashable.Hashable, Enum) via Int
 
 initialStateNum :: StateNum
 initialStateNum = StateNum 0

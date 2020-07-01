@@ -34,14 +34,12 @@ common general
         DeriveGeneric
         DeriveLift
         DeriveTraversable
-        DerivingStrategies
         DerivingVia
         DuplicateRecordFields
         EmptyCase
         FlexibleContexts
         FlexibleInstances
         GADTs
-        GeneralisedNewtypeDeriving
         InstanceSigs
         LambdaCase
         MagicHash

@@ -33,9 +33,9 @@ data ScanRule s a = ScanRule
 
 
 newtype AcceptPriority = AcceptPriority Int
-    deriving (Eq, Show, Enum)
+    deriving (Eq, Show)
     deriving Ord via Down Int
-    deriving Hashable.Hashable via Int
+    deriving (Hashable.Hashable, Enum) via Int
 
 mostPriority :: AcceptPriority
 mostPriority = AcceptPriority 0
