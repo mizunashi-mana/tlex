@@ -21,9 +21,9 @@ import qualified Language.Lexer.Tlex.Data.Graph as Graph
 import qualified Language.Lexer.Tlex.Machine.State as MState
 
 
-data NFA s a = NFA
-    { nfaInitials :: [(MState.StateNum, s)]
-    , nfaTrans :: MState.StateArray (NFAState s a)
+data NFA a = NFA
+    { nfaInitials :: [(MState.StateNum, Tlex.StartState)]
+    , nfaTrans :: MState.StateArray (NFAState a)
     }
 
 -- |
@@ -31,13 +31,13 @@ data NFA s a = NFA
 -- TODO:
 -- * support polymorphic trans condition; only support charset now.
 --
-data NFAState s a = NState
-    { nstAccepts :: [Tlex.Accept s a]
+data NFAState a = NState
+    { nstAccepts :: [Tlex.Accept a]
     , nstEpsilonTrans :: [MState.StateNum]
     , nstTrans :: [(CharSet.CharSet, MState.StateNum)]
     }
 
-epsilonClosed :: NFA s a -> NFA s a
+epsilonClosed :: NFA a -> NFA a
 epsilonClosed nfa@NFA{ nfaTrans } = nfa
     { nfaTrans = MState.mapArrayWithIx go nfaTrans
     }
@@ -50,15 +50,15 @@ epsilonClosed nfa@NFA{ nfaTrans } = nfa
             do MState.stateArrayToGraph do fmap nstEpsilonTrans nfaTrans
 
 
-data NFABuilderContext s m = NFABuilderContext
-    { nfaBCtxInitials :: [(MState.StateNum, s)]
+data NFABuilderContext m = NFABuilderContext
+    { nfaBCtxInitials :: [(MState.StateNum, Tlex.StartState)]
     , nfaBCtxNextStateNum :: MState.StateNum
-    , nfaBCtxStateMap :: MState.StateMap (NFAState s m)
+    , nfaBCtxStateMap :: MState.StateMap (NFAState m)
     }
 
-type NFABuilder s m = State (NFABuilderContext s m)
+type NFABuilder m = State (NFABuilderContext m)
 
-buildNFA :: NFABuilder s m () -> NFA s m
+buildNFA :: NFABuilder m () -> NFA m
 buildNFA builder =
     let bctx = execState builder initialBCtx
         arr = MState.totalStateMapToArray
@@ -75,7 +75,7 @@ buildNFA builder =
             , nfaBCtxStateMap = MState.emptyMap
             }
 
-newStateNum :: NFABuilder s m MState.StateNum
+newStateNum :: NFABuilder m MState.StateNum
 newStateNum = do
     ctx0 <- get
     let nextStateNum = nfaBCtxNextStateNum ctx0
@@ -84,7 +84,7 @@ newStateNum = do
         }
     pure nextStateNum
 
-epsilonTrans :: MState.StateNum -> MState.StateNum -> NFABuilder s m ()
+epsilonTrans :: MState.StateNum -> MState.StateNum -> NFABuilder m ()
 epsilonTrans sf st
     | sf == st  = pure ()
     | otherwise = modify' \ctx0@NFABuilderContext{ nfaBCtxStateMap } -> ctx0
@@ -102,8 +102,7 @@ epsilonTrans sf st
                 }
             do n
 
-condTrans
-    :: MState.StateNum -> CharSet.CharSet -> MState.StateNum -> NFABuilder s m ()
+condTrans :: MState.StateNum -> CharSet.CharSet -> MState.StateNum -> NFABuilder m ()
 condTrans sf r st = modify' \ctx0@NFABuilderContext{ nfaBCtxStateMap } -> ctx0
     { nfaBCtxStateMap = addCondTrans nfaBCtxStateMap
     }
@@ -119,7 +118,7 @@ condTrans sf r st = modify' \ctx0@NFABuilderContext{ nfaBCtxStateMap } -> ctx0
                 }
             do n
 
-accept :: MState.StateNum -> Tlex.Accept s m -> NFABuilder s m ()
+accept :: MState.StateNum -> Tlex.Accept m -> NFABuilder m ()
 accept s x = modify' \ctx0@NFABuilderContext{ nfaBCtxStateMap } -> ctx0
     { nfaBCtxStateMap = addAccept nfaBCtxStateMap
     }
@@ -135,7 +134,7 @@ accept s x = modify' \ctx0@NFABuilderContext{ nfaBCtxStateMap } -> ctx0
                 }
             do n
 
-initial :: MState.StateNum -> s -> NFABuilder s m ()
+initial :: MState.StateNum -> Tlex.StartState -> NFABuilder m ()
 initial s x = modify' \ctx0@NFABuilderContext{ nfaBCtxInitials } -> ctx0
     { nfaBCtxInitials = (s, x):nfaBCtxInitials
     }

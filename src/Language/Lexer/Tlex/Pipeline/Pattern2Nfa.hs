@@ -6,15 +6,14 @@ module Language.Lexer.Tlex.Pipeline.Pattern2Nfa (
 
 import Language.Lexer.Tlex.Prelude
 
-import qualified Data.HashMap.Strict as HashMap
-import qualified Data.Hashable as Hashable
+import qualified Language.Lexer.Tlex.Data.EnumMap as EnumMap
 import qualified Language.Lexer.Tlex.Syntax as Tlex
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Machine.NFA as NFA
 
 
 pattern2Nfa
-    :: MState.StateNum -> MState.StateNum -> Tlex.Pattern -> NFA.NFABuilder s m ()
+    :: MState.StateNum -> MState.StateNum -> Tlex.Pattern -> NFA.NFABuilder m ()
 pattern2Nfa = go where
     go b e = \case
         Tlex.Empty -> NFA.epsilonTrans b e
@@ -33,7 +32,7 @@ pattern2Nfa = go where
             NFA.epsilonTrans s e
 
 scanRule2Nfa
-    :: Tlex.AcceptPriority -> MState.StateNum -> Tlex.ScanRule s m -> NFA.NFABuilder s m ()
+    :: Tlex.AcceptPriority -> MState.StateNum -> Tlex.ScanRule m -> NFA.NFABuilder m ()
 scanRule2Nfa p b r = do
     e <- NFA.newStateNum
     pattern2Nfa b e do Tlex.scanRulePattern r
@@ -43,26 +42,26 @@ scanRule2Nfa p b r = do
         , accSemanticAction = Tlex.scanRuleSemanticAction r
         }
 
-scanner2Nfa :: Eq s => Hashable.Hashable s => Tlex.Scanner s m -> NFA.NFABuilder s m ()
+scanner2Nfa :: Tlex.Scanner m -> NFA.NFABuilder m ()
 scanner2Nfa Tlex.Scanner{ scannerRules } = foldM_
     do \(p, bs, is) scanRule -> aggScanRule p bs is scanRule
-    do (Tlex.mostPriority, [], HashMap.empty)
+    do (Tlex.mostPriority, [], EnumMap.empty)
     do scannerRules
     where
         aggScanRule p0 bs0 is0 scanRule = do
             b <- NFA.newStateNum
             scanRule2Nfa p0 b scanRule
-            is1 <- registerStartState is0 b do Tlex.scanRuleStartState scanRule
+            is1 <- registerStartState is0 b do Tlex.scanRuleStartStates scanRule
             pure (succ p0, b:bs0, is1)
 
         registerStartState is0 b ss = foldM
             do \is s -> do
-                (is', sn) <- case HashMap.lookup s is of
+                (is', sn) <- case EnumMap.lookup s is of
                     Just x  -> pure (is, x)
                     Nothing -> do
                         x <- NFA.newStateNum
                         NFA.initial x s
-                        pure (HashMap.insert s x is, x)
+                        pure (EnumMap.insert s x is, x)
                 NFA.epsilonTrans sn b
                 pure is'
             do is0

@@ -1,42 +1,23 @@
 module Language.Lexer.Tlex.Syntax.DSL (
-    LexerDeclaration (..),
     LexerRuleBuilder,
     lexRule,
+    buildScanner,
 ) where
 
 import Language.Lexer.Tlex.Prelude
 
-import           Data.List.NonEmpty
 import qualified Language.Lexer.Tlex.Syntax as Tlex
 
 
-data LexerDeclaration m where
-    LexerDeclaration :: forall s m. Eq s =>
-        { initialState :: s
-        , rules :: [Tlex.ScanRule s m]
-        }
-        -> LexerDeclaration m
-
-
-newtype LexerRuleBuilder s m a = LexerRuleBuilder
-    { unLexerRuleBuilder
-        :: [Tlex.ScanRule s m]
-        -> ([Tlex.ScanRule s m], a)
+buildScanner :: LexerRuleBuilder s f () -> Tlex.Scanner f
+buildScanner (LexerRuleBuilder builder) = Tlex.Scanner
+    { scannerName = mempty
+    , scannerRules = execState builder []
     }
-    deriving Functor
 
-instance Applicative (LexerRuleBuilder s m) where
-    pure x = LexerRuleBuilder \rs0 -> (rs0, x)
+newtype LexerRuleBuilder s f a = LexerRuleBuilder (State [Tlex.ScanRule f] a)
+    deriving (Functor, Applicative, Monad) via State [Tlex.ScanRule f]
 
-    LexerRuleBuilder mf <*> LexerRuleBuilder mx = LexerRuleBuilder \rs0 ->
-        let (rs1, f) = mf rs0
-            (rs2, x) = mx rs1
-        in (rs2, f x)
-
-instance Monad (LexerRuleBuilder s m) where
-    LexerRuleBuilder builder >>= k = LexerRuleBuilder \rs0 ->
-        let (rs1, x) = builder rs0
-        in unLexerRuleBuilder (k x) rs1
-
-lexRule :: NonEmpty s -> Tlex.Pattern -> Tlex.SemanticAction s m -> LexerRuleBuilder s m ()
-lexRule (s :| ss) p act = LexerRuleBuilder \rs0 -> (Tlex.ScanRule (s:ss) p act:rs0, ())
+lexRule :: Enum s => [s] -> Tlex.Pattern -> f -> LexerRuleBuilder s f ()
+lexRule ss p act = LexerRuleBuilder $ modify' \rs0 ->
+    Tlex.ScanRule [Tlex.startStateFromEnum s | s <- ss] p act:rs0

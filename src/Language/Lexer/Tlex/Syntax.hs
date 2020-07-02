@@ -10,7 +10,8 @@ module Language.Lexer.Tlex.Syntax (
     AcceptPriority,
     mostPriority,
     Accept (..),
-    SemanticAction (..),
+    StartState,
+    startStateFromEnum,
 ) where
 
 import Language.Lexer.Tlex.Prelude
@@ -19,17 +20,24 @@ import qualified Data.Hashable as Hashable
 import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 
 
-data Scanner s a = Scanner
+data Scanner a = Scanner
     { scannerName :: Text
-    , scannerInitialState :: s
-    , scannerRules :: [ScanRule s a]
+    , scannerRules :: [ScanRule a]
     }
 
-data ScanRule s a = ScanRule
-    { scanRuleStartState :: [s]
+data ScanRule a = ScanRule
+    { scanRuleStartStates :: [StartState]
     , scanRulePattern :: Pattern
-    , scanRuleSemanticAction :: SemanticAction s a
+    , scanRuleSemanticAction :: a
     }
+
+
+newtype StartState = StartState Int
+    deriving (Eq, Show)
+    deriving Enum via Int
+
+startStateFromEnum :: Enum s => s -> StartState
+startStateFromEnum x = StartState do fromEnum x
 
 
 newtype AcceptPriority = AcceptPriority Int
@@ -40,18 +48,18 @@ newtype AcceptPriority = AcceptPriority Int
 mostPriority :: AcceptPriority
 mostPriority = AcceptPriority 0
 
-data Accept s a = Accept
+data Accept a = Accept
     { accPriority :: AcceptPriority
-    , accSemanticAction :: SemanticAction s a
+    , accSemanticAction :: a
     }
 
-instance Eq (Accept s a) where
+instance Eq (Accept a) where
     Accept{ accPriority = p1 } == Accept{ accPriority = p2 } = p1 == p2
 
-instance Ord (Accept s a) where
+instance Ord (Accept a) where
     Accept{ accPriority = p1 } `compare` Accept{ accPriority = p2 } = p1 `compare` p2
 
-instance Hashable.Hashable (Accept s a) where
+instance Hashable.Hashable (Accept a) where
     hashWithSalt x Accept{ accPriority = p1 } = Hashable.hashWithSalt x p1
 
 
@@ -92,6 +100,3 @@ orP :: [Pattern] -> Pattern
 orP = \case
   []   -> Empty
   p:ps -> foldr (:|:) p ps
-
-
-data SemanticAction s a = SemanticAction (Text -> a)

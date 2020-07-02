@@ -4,7 +4,6 @@ module Language.Lexer.Tlex.Pipeline.Nfa2Dfa (
 
 import Language.Lexer.Tlex.Prelude
 
-import qualified Data.Hashable as Hashable
 import qualified Data.HashMap.Strict as HashMap
 import qualified Language.Lexer.Tlex.Data.EnumMap as EnumMap
 import qualified Language.Lexer.Tlex.Machine.State as MState
@@ -14,7 +13,7 @@ import qualified Language.Lexer.Tlex.Syntax as Tlex
 import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 
 
-nfa2Dfa :: Eq s => Hashable.Hashable s => NFA.NFA s a -> DFA.DFA s a
+nfa2Dfa :: NFA.NFA a -> DFA.DFA a
 nfa2Dfa nfa = DFA.buildDFA $ modify' \dfaBuilderCtx0 -> nfa2DfaCtxDFABuilderCtx $ execState
     do nfa2DfaM nfa
     do Nfa2DfaContext
@@ -23,14 +22,14 @@ nfa2Dfa nfa = DFA.buildDFA $ modify' \dfaBuilderCtx0 -> nfa2DfaCtxDFABuilderCtx 
         }
 
 
-data Nfa2DfaContext s m = Nfa2DfaContext
+data Nfa2DfaContext m = Nfa2DfaContext
     { nfa2DfaCtxStateMap :: HashMap.HashMap MState.StateSet MState.StateNum
-    , nfa2DfaCtxDFABuilderCtx :: DFA.DFABuilderContext s m
+    , nfa2DfaCtxDFABuilderCtx :: DFA.DFABuilderContext m
     }
 
-type Nfa2DfaM s m = State (Nfa2DfaContext s m)
+type Nfa2DfaM m = State (Nfa2DfaContext m)
 
-liftBuilderOp :: DFA.DFABuilder s m a -> Nfa2DfaM s m a
+liftBuilderOp :: DFA.DFABuilder m a -> Nfa2DfaM m a
 liftBuilderOp builder = do
     ctx0 <- get
     let (x, builderCtx1) = runState builder do nfa2DfaCtxDFABuilderCtx ctx0
@@ -39,7 +38,7 @@ liftBuilderOp builder = do
         }
     pure x
 
-registerNewState :: Eq s => Hashable.Hashable s => MState.StateSet -> Nfa2DfaM s m MState.StateNum
+registerNewState :: MState.StateSet -> Nfa2DfaM m MState.StateNum
 registerNewState nfaSs = do
     dfaSn <- liftBuilderOp DFA.newStateNum
     modify' \ctx0@Nfa2DfaContext{ nfa2DfaCtxStateMap } -> ctx0
@@ -47,7 +46,7 @@ registerNewState nfaSs = do
         }
     pure dfaSn
 
-nfa2DfaM :: Eq s => Hashable.Hashable s => NFA.NFA s m -> Nfa2DfaM s m ()
+nfa2DfaM :: NFA.NFA m -> Nfa2DfaM m ()
 nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
     initials <- forM nfaInitials \(nfaSn, s) -> do
         let nfaSs = MState.singletonSet nfaSn
