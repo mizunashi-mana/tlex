@@ -17,25 +17,34 @@ class Monad m => TlexContext m where
 data TlexResult a
     = TlexEndOfInput
     | TlexError
-    | TlexSkip
     | TlexAccepted a
 
 {-
-tlexScan :: Enum s => TlexContext m => s -> m (TlexResult a)
-tlexScan s0 = go where
-    go = do
-        mc <- tlexGetInputPart
-        goTrans (tlexInitialState s0)
+type SemanticAction = ...
 
-    goTrans s = 
-        
-        case tlexTrans s c of
-            -1 -> 
-            ns -> goTrans ns
+tlexScan :: Enum s => TlexContext m => s -> m (TlexResult SemanticAction)
+tlexScan s0 = go (tlexInitialState s0) where
+    go s = case tlexAccept s of
+        Just x  -> pure (TlexAccepted x)
+        Nothing -> do
+            mc <- tlexGetInputPart
+            case mc of
+                Nothing -> pure TlexEndOfInput
+                Just c  -> goTrans s c
+
+    goTrans s c =  case tlexTrans s c of
+        -1 -> pure TlexError
+        ns -> do
+            mc <- tlexGetInputPart
+            case mc of
+                Nothing -> pure TlexError
+                Just c  -> goTrans ns c
 
 tlexInitialState :: Enum s => s -> Int
 tlexInitialState x = case fromEnum x of
-    1 -> ...
+    1 -> 10
+    ...
+    _ -> error "unavailable start state"
 
 tlexTrans :: Int -> Char -> Int
 tlexTrans sf c = case sf of
@@ -46,7 +55,11 @@ tlexTrans sf c = case sf of
     ...
     _ -> -1
 
-tlexAccept :: s -> 
+tlexAccept :: Int -> Maybe SemanticAction
+tlexAccept i = case i of
+    1 -> Just ...
+    ...
+    _ -> Nothing
 -}
 outputDfa :: forall a. DFA.DFA a -> TH.Q TH.Dec
 outputDfa dfa = do
