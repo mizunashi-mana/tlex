@@ -12,7 +12,7 @@ module Language.Lexer.Tlex.Data.EnumMap (
     delete,
 ) where
 
-import Prelude (Enum (..), Maybe (..))
+import           Prelude            (Enum (..), Maybe (..))
 
 import qualified Data.IntMap.Strict as IntMap
 

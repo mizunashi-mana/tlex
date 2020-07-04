@@ -6,10 +6,10 @@ module Language.Lexer.Tlex.Data.EnumSet (
     toList,
 ) where
 
-import Prelude
+import           Prelude
 
 import qualified Data.Hashable as Hashable
-import qualified Data.IntSet as IntSet
+import qualified Data.IntSet   as IntSet
 
 
 newtype EnumSet a = EnumSet IntSet.IntSet

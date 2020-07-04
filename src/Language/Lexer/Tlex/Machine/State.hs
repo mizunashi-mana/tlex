@@ -28,13 +28,13 @@ module Language.Lexer.Tlex.Machine.State (
     indexGraph,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.Hashable as Hashable
-import qualified Data.IntMap.Strict as IntMap
-import qualified Data.IntSet as IntSet
-import qualified Data.Array as Array
-import qualified Data.Graph as Graph
+import qualified Data.Array                  as Array
+import qualified Data.Graph                  as Graph
+import qualified Data.Hashable               as Hashable
+import qualified Data.IntMap.Strict          as IntMap
+import qualified Data.IntSet                 as IntSet
 
 
 newtype StateNum = StateNum Int

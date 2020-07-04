@@ -14,20 +14,20 @@ module Language.Lexer.Tlex.Syntax (
     startStateFromEnum,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.Hashable as Hashable
+import qualified Data.Hashable                    as Hashable
 import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 
 
 data Scanner a = Scanner
-    { scannerName :: Text
+    { scannerName  :: Text
     , scannerRules :: [ScanRule a]
     }
 
 data ScanRule a = ScanRule
-    { scanRuleStartStates :: [StartState]
-    , scanRulePattern :: Pattern
+    { scanRuleStartStates    :: [StartState]
+    , scanRulePattern        :: Pattern
     , scanRuleSemanticAction :: a
     }
 
@@ -49,7 +49,7 @@ mostPriority :: AcceptPriority
 mostPriority = AcceptPriority 0
 
 data Accept a = Accept
-    { accPriority :: AcceptPriority
+    { accPriority       :: AcceptPriority
     , accSemanticAction :: a
     }
 

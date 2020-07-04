@@ -10,16 +10,16 @@ module Language.Lexer.Tlex.Machine.DFA (
     initial,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
-import qualified Language.Lexer.Tlex.Syntax        as Tlex
 import qualified Language.Lexer.Tlex.Machine.State as MState
+import qualified Language.Lexer.Tlex.Syntax        as Tlex
 
 
 data DFA a = DFA
     { dfaInitials :: EnumMap.EnumMap Tlex.StartState MState.StateNum
-    , dfaTrans :: MState.StateArray (DFAState a)
+    , dfaTrans    :: MState.StateArray (DFAState a)
     }
 
 -- |
@@ -28,16 +28,16 @@ data DFA a = DFA
 -- * support byte map transition.
 --
 data DFAState a = DState
-    { dstAccepts :: [Tlex.Accept a]
-    , dstTrans :: EnumMap.EnumMap Char MState.StateNum
+    { dstAccepts    :: [Tlex.Accept a]
+    , dstTrans      :: EnumMap.EnumMap Char MState.StateNum
     , dstOtherTrans :: Maybe MState.StateNum
     }
 
 
 data DFABuilderContext m = DFABuilderContext
-    { dfaBCtxInitials :: EnumMap.EnumMap Tlex.StartState MState.StateNum
+    { dfaBCtxInitials     :: EnumMap.EnumMap Tlex.StartState MState.StateNum
     , dfaBCtxNextStateNum :: MState.StateNum
-    , dfaBCtxStateMap :: MState.StateMap (DFAState m)
+    , dfaBCtxStateMap     :: MState.StateMap (DFAState m)
     }
 
 type DFABuilder m = State (DFABuilderContext m)

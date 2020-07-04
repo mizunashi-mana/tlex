@@ -4,10 +4,10 @@ module Language.Lexer.Tlex.Data.CharSet (
     CharSetElements (..),
 ) where
 
-import Prelude
+import           Prelude
 
-import Data.CharSet hiding (toList, toAscList)
-import qualified Data.IntSet as IntSet
+import           Data.CharSet hiding (toAscList, toList)
+import qualified Data.IntSet  as IntSet
 
 data CharSetElements
     = StraightChars [Char]

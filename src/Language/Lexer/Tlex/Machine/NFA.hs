@@ -13,17 +13,17 @@ module Language.Lexer.Tlex.Machine.NFA
         initial,
     ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Lexer.Tlex.Syntax as Tlex
-import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
-import qualified Language.Lexer.Tlex.Data.Graph as Graph
+import qualified Language.Lexer.Tlex.Data.CharSet  as CharSet
+import qualified Language.Lexer.Tlex.Data.Graph    as Graph
 import qualified Language.Lexer.Tlex.Machine.State as MState
+import qualified Language.Lexer.Tlex.Syntax        as Tlex
 
 
 data NFA a = NFA
     { nfaInitials :: [(MState.StateNum, Tlex.StartState)]
-    , nfaTrans :: MState.StateArray (NFAState a)
+    , nfaTrans    :: MState.StateArray (NFAState a)
     }
 
 -- |
@@ -32,9 +32,9 @@ data NFA a = NFA
 -- * support polymorphic trans condition; only support charset now.
 --
 data NFAState a = NState
-    { nstAccepts :: [Tlex.Accept a]
+    { nstAccepts      :: [Tlex.Accept a]
     , nstEpsilonTrans :: [MState.StateNum]
-    , nstTrans :: [(CharSet.CharSet, MState.StateNum)]
+    , nstTrans        :: [(CharSet.CharSet, MState.StateNum)]
     }
 
 epsilonClosed :: NFA a -> NFA a
@@ -51,9 +51,9 @@ epsilonClosed nfa@NFA{ nfaTrans } = nfa
 
 
 data NFABuilderContext m = NFABuilderContext
-    { nfaBCtxInitials :: [(MState.StateNum, Tlex.StartState)]
+    { nfaBCtxInitials     :: [(MState.StateNum, Tlex.StartState)]
     , nfaBCtxNextStateNum :: MState.StateNum
-    , nfaBCtxStateMap :: MState.StateMap (NFAState m)
+    , nfaBCtxStateMap     :: MState.StateMap (NFAState m)
     }
 
 type NFABuilder m = State (NFABuilderContext m)

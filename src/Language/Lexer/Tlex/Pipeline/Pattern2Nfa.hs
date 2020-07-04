@@ -4,12 +4,12 @@ module Language.Lexer.Tlex.Pipeline.Pattern2Nfa (
     scanner2Nfa,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Lexer.Tlex.Data.EnumMap as EnumMap
-import qualified Language.Lexer.Tlex.Syntax as Tlex
+import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
+import qualified Language.Lexer.Tlex.Machine.NFA   as NFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
-import qualified Language.Lexer.Tlex.Machine.NFA as NFA
+import qualified Language.Lexer.Tlex.Syntax        as Tlex
 
 
 pattern2Nfa

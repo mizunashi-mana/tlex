@@ -6,13 +6,13 @@ module Language.Lexer.Tlex.Output.TH (
     outputDfa,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Haskell.TH as TH
+import qualified Language.Haskell.TH               as TH
+import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
+import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
-import qualified Language.Lexer.Tlex.Machine.DFA as DFA
-import qualified Language.Lexer.Tlex.Data.EnumMap as EnumMap
-import qualified Language.Lexer.Tlex.Syntax as Tlex
+import qualified Language.Lexer.Tlex.Syntax        as Tlex
 
 
 class Monad m => TlexContext m where

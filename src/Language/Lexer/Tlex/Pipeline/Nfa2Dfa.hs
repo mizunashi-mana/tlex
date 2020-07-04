@@ -2,15 +2,15 @@ module Language.Lexer.Tlex.Pipeline.Nfa2Dfa (
     nfa2Dfa,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.HashMap.Strict as HashMap
-import qualified Language.Lexer.Tlex.Data.EnumMap as EnumMap
+import qualified Data.HashMap.Strict               as HashMap
+import qualified Language.Lexer.Tlex.Data.CharSet  as CharSet
+import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
+import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
+import qualified Language.Lexer.Tlex.Machine.NFA   as NFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
-import qualified Language.Lexer.Tlex.Machine.NFA as NFA
-import qualified Language.Lexer.Tlex.Machine.DFA as DFA
-import qualified Language.Lexer.Tlex.Syntax as Tlex
-import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
+import qualified Language.Lexer.Tlex.Syntax        as Tlex
 
 
 nfa2Dfa :: NFA.NFA a -> DFA.DFA a
@@ -25,7 +25,7 @@ nfa2Dfa nfa = DFA.buildDFA
 
 
 data Nfa2DfaContext m = Nfa2DfaContext
-    { nfa2DfaCtxStateMap :: HashMap.HashMap MState.StateSet MState.StateNum
+    { nfa2DfaCtxStateMap      :: HashMap.HashMap MState.StateSet MState.StateNum
     , nfa2DfaCtxDFABuilderCtx :: DFA.DFABuilderContext m
     }
 

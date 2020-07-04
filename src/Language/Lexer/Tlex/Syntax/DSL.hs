@@ -4,9 +4,9 @@ module Language.Lexer.Tlex.Syntax.DSL (
     buildScanner,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Lexer.Tlex.Syntax as Tlex
+import qualified Language.Lexer.Tlex.Syntax  as Tlex
 
 
 buildScanner :: LexerRuleBuilder s f () -> Tlex.Scanner f
