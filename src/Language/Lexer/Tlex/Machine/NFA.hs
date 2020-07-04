@@ -64,10 +64,11 @@ buildNFA builder =
         arr = MState.totalStateMapToArray
             do nfaBCtxNextStateNum bctx
             do nfaBCtxStateMap bctx
-    in epsilonClosed $ NFA
-        { nfaInitials = nfaBCtxInitials bctx
-        , nfaTrans = arr
-        }
+    in epsilonClosed
+        do NFA
+            { nfaInitials = nfaBCtxInitials bctx
+            , nfaTrans = arr
+            }
     where
         initialBCtx = NFABuilderContext
             { nfaBCtxInitials = []
@@ -79,9 +80,9 @@ newStateNum :: NFABuilder m MState.StateNum
 newStateNum = do
     ctx0 <- get
     let nextStateNum = nfaBCtxNextStateNum ctx0
-    put $ ctx0
-        { nfaBCtxNextStateNum = succ nextStateNum
-        }
+    put do ctx0
+            { nfaBCtxNextStateNum = succ nextStateNum
+            }
     pure nextStateNum
 
 epsilonTrans :: MState.StateNum -> MState.StateNum -> NFABuilder m ()

@@ -37,10 +37,11 @@ scanRule2Nfa p b r = do
     e <- NFA.newStateNum
     pattern2Nfa b e do Tlex.scanRulePattern r
 
-    NFA.accept e $ Tlex.Accept
-        { accPriority = p
-        , accSemanticAction = Tlex.scanRuleSemanticAction r
-        }
+    NFA.accept e
+        do Tlex.Accept
+            { accPriority = p
+            , accSemanticAction = Tlex.scanRuleSemanticAction r
+            }
 
 scanner2Nfa :: Tlex.Scanner m -> NFA.NFABuilder m ()
 scanner2Nfa Tlex.Scanner{ scannerRules } = foldM_

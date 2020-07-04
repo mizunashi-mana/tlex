@@ -19,5 +19,6 @@ newtype LexerRuleBuilder s f a = LexerRuleBuilder (State [Tlex.ScanRule f] a)
     deriving (Functor, Applicative, Monad) via State [Tlex.ScanRule f]
 
 lexRule :: Enum s => [s] -> Tlex.Pattern -> f -> LexerRuleBuilder s f ()
-lexRule ss p act = LexerRuleBuilder $ modify' \rs0 ->
-    Tlex.ScanRule [Tlex.startStateFromEnum s | s <- ss] p act:rs0
+lexRule ss p act = LexerRuleBuilder
+    do modify' \rs0 ->
+        Tlex.ScanRule [Tlex.startStateFromEnum s | s <- ss] p act:rs0

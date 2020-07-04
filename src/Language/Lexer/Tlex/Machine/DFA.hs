@@ -63,9 +63,9 @@ newStateNum :: DFABuilder m MState.StateNum
 newStateNum = do
     ctx0 <- get
     let nextStateNum = dfaBCtxNextStateNum ctx0
-    put $ ctx0
-        { dfaBCtxNextStateNum = succ nextStateNum
-        }
+    put do ctx0
+            { dfaBCtxNextStateNum = succ nextStateNum
+            }
     pure nextStateNum
 
 insertTrans :: MState.StateNum -> DFAState m -> DFABuilder m ()

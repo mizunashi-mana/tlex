@@ -14,12 +14,14 @@ import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 
 
 nfa2Dfa :: NFA.NFA a -> DFA.DFA a
-nfa2Dfa nfa = DFA.buildDFA $ modify' \dfaBuilderCtx0 -> nfa2DfaCtxDFABuilderCtx $ execState
-    do nfa2DfaM nfa
-    do Nfa2DfaContext
-        { nfa2DfaCtxStateMap = HashMap.empty
-        , nfa2DfaCtxDFABuilderCtx = dfaBuilderCtx0
-        }
+nfa2Dfa nfa = DFA.buildDFA
+    do modify' \dfaBuilderCtx0 -> nfa2DfaCtxDFABuilderCtx
+        do execState
+            do nfa2DfaM nfa
+            do Nfa2DfaContext
+                { nfa2DfaCtxStateMap = HashMap.empty
+                , nfa2DfaCtxDFABuilderCtx = dfaBuilderCtx0
+                }
 
 
 data Nfa2DfaContext m = Nfa2DfaContext
@@ -33,9 +35,9 @@ liftBuilderOp :: DFA.DFABuilder m a -> Nfa2DfaM m a
 liftBuilderOp builder = do
     ctx0 <- get
     let (x, builderCtx1) = runState builder do nfa2DfaCtxDFABuilderCtx ctx0
-    put $ ctx0
-        { nfa2DfaCtxDFABuilderCtx = builderCtx1
-        }
+    put do ctx0
+            { nfa2DfaCtxDFABuilderCtx = builderCtx1
+            }
     pure x
 
 registerNewState :: MState.StateSet -> Nfa2DfaM m MState.StateNum

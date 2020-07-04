@@ -96,9 +96,10 @@ totalStateMapToArray (StateNum boundState) (StateMap m) = StateArray
     do Array.array (0, pred boundState) do IntMap.toAscList m
 
 mapArrayWithIx :: (StateNum -> a -> a) -> StateArray a -> StateArray a
-mapArrayWithIx f (StateArray arr) = StateArray $ Array.listArray
-    do Array.bounds arr
-    do [ f (StateNum i) x | (i, x) <- Array.assocs arr ]
+mapArrayWithIx f (StateArray arr) = StateArray
+    do Array.listArray
+        do Array.bounds arr
+        do [ f (StateNum i) x | (i, x) <- Array.assocs arr ]
 
 indexArray :: StateArray a -> StateNum -> a
 indexArray (StateArray arr) (StateNum i) = arr Array.! i
