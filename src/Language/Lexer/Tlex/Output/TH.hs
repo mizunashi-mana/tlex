@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Language.Lexer.Tlex.Output.TH (
     TlexContext (..),
     TlexResult (..),
@@ -9,6 +11,8 @@ import Language.Lexer.Tlex.Prelude
 import qualified Language.Haskell.TH as TH
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Machine.DFA as DFA
+import qualified Language.Lexer.Tlex.Data.EnumMap as EnumMap
+import qualified Language.Lexer.Tlex.Syntax as Tlex
 
 
 class Monad m => TlexContext m where
@@ -20,10 +24,11 @@ data TlexResult a
     | TlexAccepted a
 
 {-
+type StartState = ...
 type SemanticAction = ...
 
-tlexScan :: Enum s => TlexContext m => s -> m (TlexResult SemanticAction)
-tlexScan s0 = go (tlexInitialState s0) where
+tlexScan :: TlexContext m => StartState -> m (TlexResult SemanticAction)
+tlexScan s0 = go (tlexInitial s0) where
     go s = case tlexAccept s of
         Just x  -> pure (TlexAccepted x)
         Nothing -> do
@@ -40,8 +45,8 @@ tlexScan s0 = go (tlexInitialState s0) where
                 Nothing -> pure TlexError
                 Just c  -> goTrans ns c
 
-tlexInitialState :: Enum s => s -> Int
-tlexInitialState x = case fromEnum x of
+tlexInitial :: StartState -> Int
+tlexInitial x = case fromEnum x of
     1 -> 10
     ...
     _ -> error "unavailable start state"
@@ -61,16 +66,94 @@ tlexAccept i = case i of
     ...
     _ -> Nothing
 -}
-outputDfa :: forall a. DFA.DFA a -> TH.Q TH.Dec
+outputDfa :: DFA.DFA a -> TH.Q [TH.Dec]
 outputDfa dfa = do
-    let fName = TH.mkName "lex"
-    clause <- clauseQ
-    pure do TH.FunD fName [clause]
-    where
-        clauseQ = undefined outputDfaState dfa
+    let startStateTyName = TH.mkName "StartState"
+        semanticActionTyName = TH.mkName "SemanticAction"
+        tlexScanFnName = TH.mkName "tlexScan"
+        tlexInitialFnName = TH.mkName "tlexInitial"
+        tlexTransFnName = TH.mkName "tlexTrans"
+        tlexAcceptFnName = TH.mkName "tlexAccept"
 
-outputDfaState :: DFA.DFAState a -> TH.Q TH.Exp
-outputDfaState dfaState = undefined dfaState stateName
+    let startStateTy = pure @TH.Q do TH.ConT startStateTyName
+        semanticActionTy = pure @TH.Q do TH.ConT semanticActionTyName
+        tlexInitialFn = pure @TH.Q do TH.VarE tlexInitialFnName
+        tlexTransFn = pure @TH.Q do TH.VarE tlexTransFnName
+        tlexAcceptFn = pure @TH.Q do TH.VarE tlexAcceptFnName
 
-stateName :: MState.StateNum -> TH.Name
-stateName s = TH.mkName do 's':show do fromEnum s
+    sequence
+        [ TH.TySynD startStateTyName [] <$> [t|Int|]
+        , TH.TySynD semanticActionTyName [] <$> [t|()|]
+
+        , TH.SigD tlexScanFnName <$>
+            [t|forall m. TlexContext m => $(startStateTy) -> m (TlexResult $(semanticActionTy))|]
+        , TH.ValD
+            do TH.VarP tlexScanFnName
+            <$> do TH.NormalB <$> [e|\s0 -> go ($(tlexInitialFn) s0)|]
+            <*> [d|
+                go s = case $(tlexAcceptFn) s of
+                    Just x  -> pure (TlexAccepted x)
+                    Nothing -> do
+                        mc <- tlexGetInputPart
+                        case mc of
+                            Nothing -> pure TlexEndOfInput
+                            Just c  -> goTrans s c
+
+                goTrans s c = case $(tlexTransFn) s c of
+                    -1 -> pure TlexError
+                    ns -> case $(tlexAcceptFn) ns of
+                        Just x -> pure (TlexAccepted x)
+                        Nothing -> do
+                            mc <- tlexGetInputPart
+                            case mc of
+                                Nothing -> pure TlexError
+                                Just nc -> goTrans ns nc
+            |]
+        
+        , TH.SigD tlexInitialFnName <$>
+            [t|$(startStateTy) -> Int|]
+        , outputTlexInitialFn dfa tlexInitialFnName
+
+        , TH.SigD tlexTransFnName <$>
+            [t|Int -> Char -> Int|]
+        , outputTlexTransFn dfa tlexTransFnName
+
+        , TH.SigD tlexAcceptFnName <$>
+            [t|Int -> Maybe $(semanticActionTy)|]
+        , outputTlexAcceptFn dfa tlexAcceptFnName
+        ]
+
+outputTlexInitialFn :: DFA.DFA a -> TH.Name -> TH.Q TH.Dec
+outputTlexInitialFn DFA.DFA{ dfaInitials } fnName = TH.ValD
+    do TH.VarP fnName
+    <$> do TH.NormalB <$> do
+            xVarName <- TH.newName "x"
+            TH.LamE [TH.VarP xVarName] <$> do
+                TH.CaseE
+                    <$> [e|fromEnum $(pure do TH.VarE xVarName)|]
+                    <*> sequence do
+                        [ pure do
+                            TH.Match
+                                do TH.LitP do outputStartState k
+                                do TH.NormalB do TH.LitE do outputStateNum v
+                                do []
+                            | (k, v) <- EnumMap.assocs dfaInitials
+                            ] ++
+                            [ TH.Match
+                                <$> [p|_|]
+                                <*> do TH.NormalB <$> [e|error "unavailable start state"|]
+                                <*> pure []
+                            ]
+    <*> pure []
+
+outputTlexTransFn :: DFA.DFA a -> TH.Name -> TH.Q TH.Dec
+outputTlexTransFn = undefined
+
+outputTlexAcceptFn :: DFA.DFA a -> TH.Name -> TH.Q TH.Dec
+outputTlexAcceptFn = undefined
+
+outputStartState :: Tlex.StartState -> TH.Lit
+outputStartState x = TH.IntegerL do fromIntegral do fromEnum x
+
+outputStateNum :: MState.StateNum -> TH.Lit
+outputStateNum x = TH.IntegerL do fromIntegral do fromEnum x
