@@ -20,6 +20,7 @@ module Language.Lexer.Tlex.Machine.State (
     totalStateMapToArray,
     mapArrayWithIx,
     indexArray,
+    arrayAssocs,
 
     StateGraph,
     stateArrayToGraph,
@@ -101,6 +102,9 @@ mapArrayWithIx f (StateArray arr) = StateArray $ Array.listArray
 
 indexArray :: StateArray a -> StateNum -> a
 indexArray (StateArray arr) (StateNum i) = arr Array.! i
+
+arrayAssocs :: StateArray a -> [(StateNum, a)]
+arrayAssocs (StateArray arr) = coerce do Array.assocs arr
 
 
 newtype StateGraph = StateGraph Graph.Graph

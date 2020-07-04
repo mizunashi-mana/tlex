@@ -15,12 +15,12 @@ data LexerState
 initialRule
     :: Tlex.Pattern -> Tlex.SemanticAction LexerState a
     -> Tlex.LexerRuleBuilder LexerState a ()
-initialRule = Tlex.lexerRule do pure Initial
+initialRule = Tlex.lexerRule $ pure Initial
 
 nestedCommentRule
     :: Tlex.Pattern -> Tlex.SemanticAction LexerState a
     -> Tlex.LexerRuleBuilder LexerState a ()
-nestedCommentRule = Tlex.lexerRule do pure NestedComment
+nestedCommentRule = Tlex.lexerRule $ pure NestedComment
 
 lexer :: Tlex.LexerDeclaration a
 lexer = Tlex.LexerDeclaration
@@ -93,7 +93,7 @@ tabCs = CharSet.singleton '\t'
 uniWhiteP = charSetP UniCharSet.space
 
 commentP = dashesP <> Tlex.maybeP (anyWithoutSymbolP <> Tlex.manyP anyP) <> newlineP where
-    anyWithoutSymbolP = charSetP do anyCs `CharSet.difference` symbolCs
+    anyWithoutSymbolP = charSetP $ anyCs `CharSet.difference` symbolCs
 dashesP = dashP <> dashP <> Tlex.manyP dashP
 dashP = chP '-'
 openComP = stringP "{-"

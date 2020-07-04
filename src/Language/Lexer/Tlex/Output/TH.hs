@@ -49,22 +49,19 @@ tlexInitial :: StartState -> Int
 tlexInitial x = case fromEnum x of
     1 -> 10
     ...
-    _ -> error "unavailable start state"
+    _ -> error ("unavailable start state: " ++ show x)
 
 tlexTrans :: Int -> Char -> Int
-tlexTrans sf c = case sf of
-    1 -> case c of
-        'a' -> 2
-        ...
-        _ -> 4
-    ...
-    _ -> -1
+tlexTrans 1 'a' = 2
+...
+tlexTrans 1 _ = 4
+...
+tlexTrans _ _ = -1
 
 tlexAccept :: Int -> Maybe SemanticAction
-tlexAccept i = case i of
-    1 -> Just ...
-    ...
-    _ -> Nothing
+tlexAccept 1 = Just ...
+...
+tlexAccept _ = Nothing
 -}
 outputDfa :: DFA.DFA a -> TH.Q [TH.Dec]
 outputDfa dfa = do
@@ -100,16 +97,18 @@ outputDfa dfa = do
                             Just c  -> goTrans s c
 
                 goTrans s c = case $(tlexTransFn) s c of
-                    -1 -> pure TlexError
-                    ns -> case $(tlexAcceptFn) ns of
-                        Just x -> pure (TlexAccepted x)
-                        Nothing -> do
-                            mc <- tlexGetInputPart
-                            case mc of
-                                Nothing -> pure TlexError
-                                Just nc -> goTrans ns nc
+                    $(pure do TH.LitP outputEndOfState) ->
+                        pure TlexError
+                    ns ->
+                        case $(tlexAcceptFn) ns of
+                            Just x -> pure (TlexAccepted x)
+                            Nothing -> do
+                                mc <- tlexGetInputPart
+                                case mc of
+                                    Nothing -> pure TlexError
+                                    Just nc -> goTrans ns nc
             |]
-        
+
         , TH.SigD tlexInitialFnName <$>
             [t|$(startStateTy) -> Int|]
         , outputTlexInitialFn dfa tlexInitialFnName
@@ -141,19 +140,67 @@ outputTlexInitialFn DFA.DFA{ dfaInitials } fnName = TH.ValD
                             ] ++
                             [ TH.Match
                                 <$> [p|_|]
-                                <*> do TH.NormalB <$> [e|error "unavailable start state"|]
+                                <*> do TH.NormalB
+                                        <$> [e|error ("unavailable start state: " ++ show $(pure do TH.VarE xVarName))|]
                                 <*> pure []
                             ]
     <*> pure []
 
 outputTlexTransFn :: DFA.DFA a -> TH.Name -> TH.Q TH.Dec
-outputTlexTransFn = undefined
+outputTlexTransFn DFA.DFA{ dfaTrans } fnName = TH.FunD fnName
+    <$> sequence
+            let clauses = do
+                    (sf, dst) <- MState.arrayAssocs dfaTrans
+                    let sfP = TH.LitP do outputStateNum sf
+                    [ pure do
+                        TH.Clause [sfP, TH.LitP do TH.CharL c]
+                            do TH.NormalB do TH.LitE do outputStateNum st
+                            do []
+                        | (c, st) <- EnumMap.assocs do DFA.dstTrans dst
+                        ]
+                        ++
+                        case DFA.dstOtherTrans dst of
+                            Nothing -> []
+                            Just st ->
+                                [ TH.Clause
+                                    <$> sequence [pure sfP, [p|_|] ]
+                                    <*> pure do TH.NormalB do TH.LitE do outputStateNum st
+                                    <*> pure []
+                                ]
+            in clauses ++
+                [ TH.Clause
+                    <$> sequence [ [p|_|], [p|_|] ]
+                    <*> pure do TH.NormalB do TH.LitE outputEndOfState
+                    <*> pure []
+                ]
+
 
 outputTlexAcceptFn :: DFA.DFA a -> TH.Name -> TH.Q TH.Dec
-outputTlexAcceptFn = undefined
+outputTlexAcceptFn DFA.DFA{ dfaTrans } fnName = TH.FunD fnName
+    <$> sequence
+            let clauses = do
+                    (sf, dst) <- MState.arrayAssocs dfaTrans
+                    case DFA.dstAccepts dst of
+                        []    -> []
+                        -- TODO: acc:_ ->
+                        _:_ ->
+                            [ TH.Clause
+                                do [ TH.LitP do outputStateNum sf ]
+                                <$> do TH.NormalB <$> [e|Just ()|]
+                                <*> pure []
+                            ]
+            in clauses ++
+                [ TH.Clause
+                    <$> sequence [ [p|_|] ]
+                    <*> do TH.NormalB <$> [e|Nothing|]
+                    <*> pure []
+                ]
 
 outputStartState :: Tlex.StartState -> TH.Lit
 outputStartState x = TH.IntegerL do fromIntegral do fromEnum x
 
 outputStateNum :: MState.StateNum -> TH.Lit
 outputStateNum x = TH.IntegerL do fromIntegral do fromEnum x
+
+outputEndOfState :: TH.Lit
+outputEndOfState = TH.IntegerL -1
