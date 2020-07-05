@@ -53,29 +53,25 @@ buildTHScanner startStateTy actionTy builder =
         , thScannerTlexScanner = tlexScanner
         }
 
-buildTHScannerWithReify :: forall s a. Typeable s => Typeable a => THScannerBuilder s a () -> TH.Q (Maybe THScanner)
-buildTHScannerWithReify builder = do
-    mstartStateTy <- TypeableTH.liftTypeFromTypeable do Proxy @s
-    mactionTy <- TypeableTH.liftTypeFromTypeable do Proxy @a
-    forM
-        do (,) <$> mstartStateTy <*> mactionTy
-        do \(startStateTy, actionTy) ->
-            let outputCtx = TlexTH.OutputContext
-                    { outputCtxStartStateTy = startStateTy
-                    , outputCtxSemanticActionTy = actionTy
-                    }
-                tlexScanner = Tlex.buildScanner do
-                    modify' \ctx0 -> thScannerBuilderCtxTlexScannerBuilderCtx
-                        do execState builder do
-                            THScannerBuilderContext
-                                { thScannerBuilderCtxOutputCtx = outputCtx
-                                , thScannerBuilderCtxTlexScannerBuilderCtx = ctx0
-                                }
-            in pure do
-                THScanner
-                    { thScannerOutputCtx = outputCtx
-                    , thScannerTlexScanner = tlexScanner
-                    }
+buildTHScannerWithReify :: forall s a. Typeable s => Typeable a => THScannerBuilder s a () -> THScanner
+buildTHScannerWithReify builder =
+    let startStateTy = TypeableTH.liftTypeFromTypeable do Proxy @s
+        actionTy = TypeableTH.liftTypeFromTypeable do Proxy @s
+        outputCtx = TlexTH.OutputContext
+            { outputCtxStartStateTy = startStateTy
+            , outputCtxSemanticActionTy = actionTy
+            }
+        tlexScanner = Tlex.buildScanner do
+            modify' \ctx0 -> thScannerBuilderCtxTlexScannerBuilderCtx
+                do execState builder do
+                    THScannerBuilderContext
+                        { thScannerBuilderCtxOutputCtx = outputCtx
+                        , thScannerBuilderCtxTlexScannerBuilderCtx = ctx0
+                        }
+    in THScanner
+        { thScannerOutputCtx = outputCtx
+        , thScannerTlexScanner = tlexScanner
+        }
 
 liftTlexScannerBuilder :: Tlex.ScannerBuilder s (TH.Q TH.Exp) a -> THScannerBuilder s f a
 liftTlexScannerBuilder builder = do

@@ -12,12 +12,13 @@ module Language.Lexer.Tlex.Data.EnumMap (
     delete,
 ) where
 
-import           Prelude            (Enum (..), Maybe (..))
+import           Prelude            hiding (lookup)
 
 import qualified Data.IntMap.Strict as IntMap
 
 
 newtype EnumMap k a = EnumMap (IntMap.IntMap a)
+    deriving (Eq, Show)
 
 empty :: Enum k => EnumMap k a
 empty = EnumMap IntMap.empty

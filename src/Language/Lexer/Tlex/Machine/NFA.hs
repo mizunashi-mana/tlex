@@ -25,6 +25,7 @@ data NFA a = NFA
     { nfaInitials :: [(MState.StateNum, Tlex.StartState)]
     , nfaTrans    :: MState.StateArray (NFAState a)
     }
+    deriving (Eq, Show, Functor)
 
 -- |
 --
@@ -36,6 +37,7 @@ data NFAState a = NState
     , nstEpsilonTrans :: [MState.StateNum]
     , nstTrans        :: [(CharSet.CharSet, MState.StateNum)]
     }
+    deriving (Eq, Show, Functor)
 
 epsilonClosed :: NFA a -> NFA a
 epsilonClosed nfa@NFA{ nfaTrans } = nfa

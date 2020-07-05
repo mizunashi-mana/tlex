@@ -24,11 +24,8 @@ nestedCommentRule :: Tlex.Pattern -> TH.Q (TH.TExp LexerAction)
 nestedCommentRule = TlexTH.thLexRule [NestedComment]
 
 buildLexer :: TH.Q [TH.Dec]
-buildLexer = do
-    mlexer <- TlexTH.buildTHScannerWithReify lexerRules
-    case mlexer of
-        Nothing    -> error "unreachable"
-        Just lexer -> TlexTH.outputScanner lexer
+buildLexer = TlexTH.outputScanner
+    $ TlexTH.buildTHScannerWithReify lexerRules
 
 lexerRules :: TlexTH.THScannerBuilder LexerState () ()
 lexerRules = do

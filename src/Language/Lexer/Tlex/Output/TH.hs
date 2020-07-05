@@ -23,6 +23,7 @@ data TlexResult a
     = TlexEndOfInput
     | TlexError
     | TlexAccepted a
+    deriving (Eq, Show)
 
 {-
 type TlexStartState = ...
@@ -70,7 +71,7 @@ data OutputContext = OutputContext
     }
     deriving (Eq, Show)
 
-outputDfa :: OutputContext -> DFA.DFA a -> TH.Q [TH.Dec]
+outputDfa :: OutputContext -> DFA.DFA (TH.Q TH.Exp) -> TH.Q [TH.Dec]
 outputDfa ctx dfa = do
     let startStateTyName = TH.mkName "TlexStartState"
         semanticActionTyName = TH.mkName "TlexSemanticAction"
@@ -182,18 +183,17 @@ outputTlexTransFn DFA.DFA{ dfaTrans } fnName = TH.FunD fnName
                 ]
 
 
-outputTlexAcceptFn :: DFA.DFA a -> TH.Name -> TH.Q TH.Dec
+outputTlexAcceptFn :: DFA.DFA (TH.Q TH.Exp) -> TH.Name -> TH.Q TH.Dec
 outputTlexAcceptFn DFA.DFA{ dfaTrans } fnName = TH.FunD fnName
     <$> sequence
             let clauses = do
                     (sf, dst) <- MState.arrayAssocs dfaTrans
                     case DFA.dstAccepts dst of
                         []    -> []
-                        -- TODO: acc:_ ->
-                        _:_ ->
+                        acc:_ ->
                             [ TH.Clause
                                 do [ TH.LitP do outputStateNum sf ]
-                                <$> do TH.NormalB <$> [e|Just ()|]
+                                <$> do TH.NormalB <$> Tlex.accSemanticAction acc
                                 <*> pure []
                             ]
             in clauses ++

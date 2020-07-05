@@ -21,6 +21,7 @@ data DFA a = DFA
     { dfaInitials :: EnumMap.EnumMap Tlex.StartState MState.StateNum
     , dfaTrans    :: MState.StateArray (DFAState a)
     }
+    deriving (Eq, Show, Functor)
 
 -- |
 --
@@ -32,6 +33,7 @@ data DFAState a = DState
     , dstTrans      :: EnumMap.EnumMap Char MState.StateNum
     , dstOtherTrans :: Maybe MState.StateNum
     }
+    deriving (Eq, Show, Functor)
 
 
 data DFABuilderContext m = DFABuilderContext

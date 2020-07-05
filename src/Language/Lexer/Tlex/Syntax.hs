@@ -27,12 +27,14 @@ import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 newtype Scanner a = Scanner
     { scannerRules :: [ScanRule a]
     }
+    deriving (Eq, Show, Functor)
 
 data ScanRule a = ScanRule
     { scanRuleStartStates    :: [StartState]
     , scanRulePattern        :: Pattern
     , scanRuleSemanticAction :: a
     }
+    deriving (Eq, Show, Functor)
 
 
 buildScanner :: ScannerBuilder s f () -> Scanner f
@@ -44,6 +46,7 @@ buildScanner builder = Scanner
 newtype ScannerBuilderContext s f = ScannerBuilderContext
     { unScannerBuilderContext :: [ScanRule f]
     }
+    deriving (Eq, Show, Functor)
 
 type ScannerBuilder s f = State (ScannerBuilderContext s f)
 
@@ -72,6 +75,7 @@ data Accept a = Accept
     { accPriority       :: AcceptPriority
     , accSemanticAction :: a
     }
+    deriving (Show, Functor)
 
 instance Eq (Accept a) where
     Accept{ accPriority = p1 } == Accept{ accPriority = p2 } = p1 == p2
