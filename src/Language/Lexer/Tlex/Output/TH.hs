@@ -193,7 +193,7 @@ outputTlexAcceptFn DFA.DFA{ dfaTrans } fnName = TH.FunD fnName
                         acc:_ ->
                             [ TH.Clause
                                 do [ TH.LitP do outputStateNum sf ]
-                                <$> do TH.NormalB <$> Tlex.accSemanticAction acc
+                                <$> do TH.NormalB <$> [e|Just $(Tlex.accSemanticAction acc)|]
                                 <*> pure []
                             ]
             in clauses ++

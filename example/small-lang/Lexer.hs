@@ -21,12 +21,11 @@ buildLexer = TlexTH.outputScanner
 
 lexerRules :: TlexTH.THScannerBuilder LexerState () ()
 lexerRules = do
-    initialRule whitespaceP [||()||]
+    initialRule whitecharP [||()||]
     initialRule reservedOpP [||()||]
     initialRule varidP [||()||]
     initialRule litIntegerP [||()||]
 
-whitespaceP = Tlex.someP whitecharP
 whitecharP = charsP
     [ ' '
     , '\t'

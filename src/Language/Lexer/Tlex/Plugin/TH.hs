@@ -9,6 +9,8 @@ module Language.Lexer.Tlex.Plugin.TH (
     liftTlexScannerBuilder,
     thLexRule,
     outputScanner,
+    InputString (..),
+    runInputString,
 ) where
 
 import           Language.Lexer.Tlex.Prelude
@@ -95,3 +97,23 @@ outputScanner scanner =
             TlexPipeline.scanner2Nfa do thScannerTlexScanner scanner
         dfa = TlexPipeline.nfa2Dfa nfa
     in TlexTH.outputDfa outputCtx dfa
+
+
+newtype InputString a = InputString (State [Char] a)
+    deriving Functor
+    deriving (Applicative, Monad) via State [Char]
+
+
+instance TlexTH.TlexContext InputString where
+    tlexGetInputPart = InputString do
+        input <- get
+        case input of
+            []  -> pure Nothing
+            c:r -> do
+                put r
+                pure do Just c
+
+runInputString :: InputString a -> [Char] -> ([Char], a)
+runInputString (InputString builder) input =
+    let (x, s) = runState builder input
+    in (s, x)

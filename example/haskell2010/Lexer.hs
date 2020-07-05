@@ -29,7 +29,7 @@ buildLexer = TlexTH.outputScanner
 
 lexerRules :: TlexTH.THScannerBuilder LexerState () ()
 lexerRules = do
-    initialRule whitespaceP [||()||]
+    initialRule whitecharP [||()||]
 
     initialRule commentP [||()||]
 
@@ -60,8 +60,6 @@ lexerRules = do
 specialP = charSetP specialCs
 specialCs = CharSet.fromList
     ['(', ')', ',', ';', '[', ']', '`', '{', '}']
-
-whitespaceP = Tlex.someP whitecharP
 
 whitecharP = Tlex.orP
     [ newlineP

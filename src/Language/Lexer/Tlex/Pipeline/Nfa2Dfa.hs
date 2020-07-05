@@ -53,13 +53,24 @@ registerNewState nfaSs = do
 nfa2DfaM :: NFA.NFA m -> Nfa2DfaM m ()
 nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
     initials <- forM nfaInitials \(nfaSn, s) -> do
-        let nfaSs = MState.singletonSet nfaSn
+        let nfaSs = buildNfaSs nfaSn
         dfaSn <- registerNewState nfaSs
         liftBuilderOp do DFA.initial dfaSn s
         pure (dfaSn, nfaSs)
 
     buildStateMap initials
     where
+        buildNfaSs nfaSn =
+            let nfaState = nfaTrans `MState.indexArray` nfaSn
+            in MState.listToSet do NFA.nstEpsilonTrans nfaState
+
+        insertNfaSn nfaSn0 nfaSs0 =
+            let nfaState0 = nfaTrans `MState.indexArray` nfaSn0
+            in foldl'
+                do \nfaSs nfaSn -> MState.insertSet nfaSn nfaSs
+                do nfaSs0
+                do NFA.nstEpsilonTrans nfaState0
+
         buildStateMap = \case
             []                   -> pure ()
             (dfaSn, nfaSs):rest0 -> Debug.trace
@@ -117,13 +128,13 @@ nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
                     }
                 )
 
-        insertTrans (trans0, otherTrans0) (r, sn) = Debug.trace ("insertTrans: " ++ show r) case CharSet.toElements r of
+        insertTrans (trans0, otherTrans0) (r, nfaSn) = Debug.trace ("insertTrans: " ++ show r) case CharSet.toElements r of
             CharSet.StraightChars cs ->
-                let ~newTrans = MState.insertSet sn otherTrans0
+                let ~newTrans = insertNfaSn nfaSn otherTrans0
                     trans1 = foldl'
                         do \trans c -> EnumMap.insertOrUpdate c
                             do newTrans
-                            do \ss -> MState.insertSet sn ss
+                            do \ss -> insertNfaSn nfaSn ss
                             do trans
                         do trans0
                         do cs
@@ -141,8 +152,8 @@ nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
                                             do cs
                     trans2 = EnumMap.foldlWithKey'
                                 do \trans c ss -> EnumMap.insert c
-                                    do MState.insertSet sn ss
+                                    do insertNfaSn nfaSn ss
                                     do trans
                                 do trans1
                                 do diffTrans1
-                in (trans2, MState.insertSet sn otherTrans0)
+                in (trans2, insertNfaSn nfaSn otherTrans0)
