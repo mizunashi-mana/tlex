@@ -6,7 +6,6 @@ module Language.Lexer.Tlex.Data.TypeableTH (
 ) where
 
 import           Data.Foldable       (foldl')
-import           Prelude
 
 import qualified Data.Typeable       as Typeable
 import qualified Language.Haskell.TH as TH
@@ -21,6 +20,4 @@ liftTypeFromTypeable p = go do Typeable.typeRep p where
             do [ go r | r <- rs ]
 
 tyConToType :: Typeable.TyCon -> TH.Type
-tyConToType tyCon = TH.ConT do TH.mkName tyConQualifiedName
-    where
-        tyConQualifiedName = Typeable.tyConModule tyCon ++ "." ++ Typeable.tyConName tyCon
+tyConToType tyCon = TH.ConT do TH.mkName do Typeable.tyConName tyCon

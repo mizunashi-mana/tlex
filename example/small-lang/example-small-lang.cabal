@@ -1,0 +1,26 @@
+cabal-version:       3.0
+build-type:          Simple
+
+name:                example-small-lang
+version:             0.1.0.0
+license:             Apache-2.0 OR MPL-2.0
+author:              Mizunashi Mana
+maintainer:          mizunashi-mana@noreply.git
+copyright:           (c) 2020 Mizunashi Mana
+
+extra-source-files:
+    README.md
+
+executable small-lang-lexer
+    default-language:
+        Haskell2010
+    main-is:
+        Main.hs
+    build-depends:
+        base,
+        tlex,
+        charset,
+        template-haskell,
+    other-modules:
+        Lexer
+        LexerSample

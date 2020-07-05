@@ -29,7 +29,7 @@ buildLexer = TlexTH.outputScanner
 
 lexerRules :: TlexTH.THScannerBuilder LexerState () ()
 lexerRules = do
-    initialRule whitecharP [||()||]
+    initialRule whitespaceP [||()||]
 
     initialRule commentP [||()||]
 
@@ -60,6 +60,8 @@ lexerRules = do
 specialP = charSetP specialCs
 specialCs = CharSet.fromList
     ['(', ')', ',', ';', '[', ']', '`', '{', '}']
+
+whitespaceP = Tlex.someP whitecharP
 
 whitecharP = Tlex.orP
     [ newlineP
@@ -173,8 +175,8 @@ hexitCs = mconcat
     , CharSet.range 'a' 'f'
     ]
 
-varidP = smallP <> Tlex.orP [smallP, largeP, digitP, chP '\'']
-conidP = largeP <> Tlex.orP [smallP, largeP, digitP, chP '\'']
+varidP = smallP <> Tlex.manyP (Tlex.orP [smallP, largeP, digitP, chP '\''])
+conidP = largeP <> Tlex.manyP (Tlex.orP [smallP, largeP, digitP, chP '\''])
 reservedIdP = Tlex.orP
     [ stringP "case"
     , stringP "class"
