@@ -77,10 +77,7 @@ common general
 
     build-depends:
         base,
-        bytestring,
-        text,
-        prettyprinter,
-        prettyprinter-ansi-terminal,
+        ghc-prim,
 
         -- project depends
         array,
@@ -110,8 +107,7 @@ library
     exposed-modules:
         Language.Lexer.Tlex
         Language.Lexer.Tlex.Syntax
-        Language.Lexer.Tlex.Syntax.DSL
-        Language.Lexer.Tlex.Output.TH
+        Language.Lexer.Tlex.Plugin.TH
 
         -- internals
         Language.Lexer.Tlex.Prelude
@@ -120,10 +116,12 @@ library
         Language.Lexer.Tlex.Machine.DFA
         Language.Lexer.Tlex.Pipeline.Pattern2Nfa
         Language.Lexer.Tlex.Pipeline.Nfa2Dfa
+        Language.Lexer.Tlex.Output.TH
         Language.Lexer.Tlex.Data.EnumSet
         Language.Lexer.Tlex.Data.EnumMap
         Language.Lexer.Tlex.Data.CharSet
         Language.Lexer.Tlex.Data.Graph
+        Language.Lexer.Tlex.Data.TypeableTH
 
     other-modules:
         Language.Lexer.Tlex.Prelude.Core

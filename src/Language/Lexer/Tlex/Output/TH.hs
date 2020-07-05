@@ -3,6 +3,7 @@
 module Language.Lexer.Tlex.Output.TH (
     TlexContext (..),
     TlexResult (..),
+    OutputContext (..),
     outputDfa,
 ) where
 
@@ -24,10 +25,10 @@ data TlexResult a
     | TlexAccepted a
 
 {-
-type StartState = ...
-type SemanticAction = ...
+type TlexStartState = ...
+type TlexSemanticAction = ...
 
-tlexScan :: TlexContext m => StartState -> m (TlexResult SemanticAction)
+tlexScan :: TlexContext m => TlexStartState -> m (TlexResult TlexSemanticAction)
 tlexScan s0 = go (tlexInitial s0) where
     go s = case tlexAccept s of
         Just x  -> pure (TlexAccepted x)
@@ -37,7 +38,7 @@ tlexScan s0 = go (tlexInitial s0) where
                 Nothing -> pure TlexEndOfInput
                 Just c  -> goTrans s c
 
-    goTrans s c =  case tlexTrans s c of
+    goTrans s c = case tlexTrans s c of
         -1 -> pure TlexError
         ns -> do
             mc <- tlexGetInputPart
@@ -58,15 +59,21 @@ tlexTrans 1 _ = 4
 ...
 tlexTrans _ _ = -1
 
-tlexAccept :: Int -> Maybe SemanticAction
+tlexAccept :: Int -> Maybe TlexSemanticAction
 tlexAccept 1 = Just ...
 ...
 tlexAccept _ = Nothing
 -}
-outputDfa :: DFA.DFA a -> TH.Q [TH.Dec]
-outputDfa dfa = do
-    let startStateTyName = TH.mkName "StartState"
-        semanticActionTyName = TH.mkName "SemanticAction"
+data OutputContext = OutputContext
+    { outputCtxStartStateTy :: TH.Type
+    , outputCtxSemanticActionTy :: TH.Type
+    }
+    deriving (Eq, Show)
+
+outputDfa :: OutputContext -> DFA.DFA a -> TH.Q [TH.Dec]
+outputDfa ctx dfa = do
+    let startStateTyName = TH.mkName "TlexStartState"
+        semanticActionTyName = TH.mkName "TlexSemanticAction"
         tlexScanFnName = TH.mkName "tlexScan"
         tlexInitialFnName = TH.mkName "tlexInitial"
         tlexTransFnName = TH.mkName "tlexTrans"
@@ -79,8 +86,8 @@ outputDfa dfa = do
         tlexAcceptFn = pure @TH.Q do TH.VarE tlexAcceptFnName
 
     sequence
-        [ TH.TySynD startStateTyName [] <$> [t|Int|]
-        , TH.TySynD semanticActionTyName [] <$> [t|()|]
+        [ pure do TH.TySynD startStateTyName [] do outputCtxStartStateTy ctx
+        , pure do TH.TySynD semanticActionTyName [] do outputCtxSemanticActionTy ctx
 
         , TH.SigD tlexScanFnName <$>
             [t|forall m. TlexContext m => $(startStateTy) -> m (TlexResult $(semanticActionTy))|]

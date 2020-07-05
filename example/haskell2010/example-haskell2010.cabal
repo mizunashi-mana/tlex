@@ -21,3 +21,5 @@ executable haskell2010-lexer
         tlex,
         charset,
         template-haskell,
+    other-modules:
+        Lexer

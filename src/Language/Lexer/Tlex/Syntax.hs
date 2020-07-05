@@ -1,6 +1,10 @@
 module Language.Lexer.Tlex.Syntax (
     Scanner (..),
     ScanRule (..),
+    ScannerBuilder,
+    ScannerBuilderContext,
+    buildScanner,
+    lexRule,
     Pattern (..),
     anyoneP,
     maybeP,
@@ -20,9 +24,8 @@ import qualified Data.Hashable                    as Hashable
 import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
 
 
-data Scanner a = Scanner
-    { scannerName  :: Text
-    , scannerRules :: [ScanRule a]
+newtype Scanner a = Scanner
+    { scannerRules :: [ScanRule a]
     }
 
 data ScanRule a = ScanRule
@@ -30,6 +33,23 @@ data ScanRule a = ScanRule
     , scanRulePattern        :: Pattern
     , scanRuleSemanticAction :: a
     }
+
+
+buildScanner :: ScannerBuilder s f () -> Scanner f
+buildScanner builder = Scanner
+    { scannerRules = unScannerBuilderContext
+        do execState builder do ScannerBuilderContext []
+    }
+
+newtype ScannerBuilderContext s f = ScannerBuilderContext
+    { unScannerBuilderContext :: [ScanRule f]
+    }
+
+type ScannerBuilder s f = State (ScannerBuilderContext s f)
+
+lexRule :: Enum s => [s] -> Pattern -> f -> ScannerBuilder s f ()
+lexRule ss p act = modify' \(ScannerBuilderContext rs0) ->
+    ScannerBuilderContext do ScanRule [startStateFromEnum s | s <- ss] p act:rs0
 
 
 newtype StartState = StartState Int
