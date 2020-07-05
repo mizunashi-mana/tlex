@@ -11,19 +11,19 @@ module Language.Lexer.Tlex.Plugin.TH (
     outputScanner,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Haskell.TH as TH
-import qualified Language.Lexer.Tlex.Syntax as Tlex
-import qualified Language.Lexer.Tlex.Machine.NFA as NFA
+import qualified Language.Haskell.TH                      as TH
+import qualified Language.Lexer.Tlex.Data.TypeableTH      as TypeableTH
+import qualified Language.Lexer.Tlex.Machine.NFA          as NFA
+import qualified Language.Lexer.Tlex.Output.TH            as TlexTH
+import qualified Language.Lexer.Tlex.Pipeline.Nfa2Dfa     as TlexPipeline
 import qualified Language.Lexer.Tlex.Pipeline.Pattern2Nfa as TlexPipeline
-import qualified Language.Lexer.Tlex.Pipeline.Nfa2Dfa as TlexPipeline
-import qualified Language.Lexer.Tlex.Output.TH as TlexTH
-import qualified Language.Lexer.Tlex.Data.TypeableTH as TypeableTH
+import qualified Language.Lexer.Tlex.Syntax               as Tlex
 
 
 data THScanner = THScanner
-    { thScannerOutputCtx :: TlexTH.OutputContext
+    { thScannerOutputCtx   :: TlexTH.OutputContext
     , thScannerTlexScanner :: Tlex.Scanner (TH.Q TH.Exp)
     }
 

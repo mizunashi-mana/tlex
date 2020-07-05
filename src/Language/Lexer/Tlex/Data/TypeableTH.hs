@@ -5,9 +5,9 @@ module Language.Lexer.Tlex.Data.TypeableTH (
     tyConToType,
 ) where
 
-import Prelude
-import Control.Monad
-import Data.Foldable (foldl')
+import           Control.Monad
+import           Data.Foldable       (foldl')
+import           Prelude
 
 import qualified Data.Typeable       as Typeable
 import qualified Language.Haskell.TH as TH

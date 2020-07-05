@@ -2,11 +2,11 @@
 
 module Lexer where
 
-import qualified Language.Lexer.Tlex as Tlex
+import qualified Data.CharSet                  as CharSet
+import qualified Data.CharSet.Unicode          as UniCharSet
+import qualified Language.Haskell.TH           as TH
+import qualified Language.Lexer.Tlex           as Tlex
 import qualified Language.Lexer.Tlex.Plugin.TH as TlexTH
-import qualified Language.Haskell.TH as TH
-import qualified Data.CharSet         as CharSet
-import qualified Data.CharSet.Unicode as UniCharSet
 
 data LexerState
     = Initial

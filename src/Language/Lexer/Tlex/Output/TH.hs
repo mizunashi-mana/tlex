@@ -65,7 +65,7 @@ tlexAccept 1 = Just ...
 tlexAccept _ = Nothing
 -}
 data OutputContext = OutputContext
-    { outputCtxStartStateTy :: TH.Type
+    { outputCtxStartStateTy     :: TH.Type
     , outputCtxSemanticActionTy :: TH.Type
     }
     deriving (Eq, Show)
