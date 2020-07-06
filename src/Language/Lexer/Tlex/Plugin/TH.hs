@@ -104,7 +104,7 @@ newtype InputString a = InputString (State [Char] a)
     deriving (Applicative, Monad) via State [Char]
 
 
-instance TlexTH.TlexContext InputString where
+instance TlexTH.TlexContext [Char] InputString where
     tlexGetInputPart = InputString do
         input <- get
         case input of
@@ -112,6 +112,7 @@ instance TlexTH.TlexContext InputString where
             c:r -> do
                 put r
                 pure do Just c
+    tlexGetMark = InputString get
 
 runInputString :: InputString a -> [Char] -> ([Char], a)
 runInputString (InputString builder) input =

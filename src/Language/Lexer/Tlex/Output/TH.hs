@@ -16,36 +16,55 @@ import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
 
 
-class Monad m => TlexContext m where
+class Monad m => TlexContext s m | m -> s where
     tlexGetInputPart :: m (Maybe Char)
+    tlexGetMark :: m s
 
-data TlexResult a
+data TlexResult s a
     = TlexEndOfInput
     | TlexError
-    | TlexAccepted a
+    | TlexAccepted s a
     deriving (Eq, Show)
 
 {-
 type TlexStartState = ...
 type TlexSemanticAction = ...
 
-tlexScan :: TlexContext m => TlexStartState -> m (TlexResult TlexSemanticAction)
+tlexScan :: TlexContext s m => TlexStartState -> m (TlexResult s TlexSemanticAction)
 tlexScan s0 = go (tlexInitial s0) where
     go s = case tlexAccept s of
-        Just x  -> pure (TlexAccepted x)
+        Just x  -> do
+            acc <- buildAccepted x
+            mc <- tlexGetInputPart
+            case mc of
+                Nothing -> pure acc
+                Just c  -> goTrans s c (Just acc)
         Nothing -> do
             mc <- tlexGetInputPart
             case mc of
                 Nothing -> pure TlexEndOfInput
-                Just c  -> goTrans s c
+                Just c  -> goTrans s c Nothing
 
-    goTrans s c = case tlexTrans s c of
-        -1 -> pure TlexError
+    goTrans s c preAccepted = case tlexTrans s c of
+        -1 -> goEnd preAccepted
         ns -> do
+            nacc <- case tlexAccept ns of
+                Just x -> do
+                    acc <- buildAccepted x
+                    pure (Just acc)
+                Nothing -> pure preAccepted
             mc <- tlexGetInputPart
             case mc of
-                Nothing -> pure TlexError
-                Just c  -> goTrans ns c
+                Nothing -> goEnd nacc
+                Just nc -> goTrans ns nc nacc
+
+    buildAccepted x = do
+        m <- tlexGetMark
+        pure (TlexAccepted m x)
+
+    goEnd preAccepted = case preAccepted of
+        Nothing  -> pure TlexError
+        Just acc -> pure acc
 
 tlexInitial :: StartState -> Int
 tlexInitial x = case fromEnum x of
@@ -91,30 +110,44 @@ outputDfa ctx dfa = do
         , pure do TH.TySynD semanticActionTyName [] do outputCtxSemanticActionTy ctx
 
         , TH.SigD tlexScanFnName <$>
-            [t|forall m. TlexContext m => $(startStateTy) -> m (TlexResult $(semanticActionTy))|]
+            [t|forall s m. TlexContext s m => $(startStateTy) -> m (TlexResult s $(semanticActionTy))|]
         , TH.ValD
             do TH.VarP tlexScanFnName
             <$> do TH.NormalB <$> [e|\s0 -> go ($(tlexInitialFn) s0)|]
             <*> [d|
                 go s = case $(tlexAcceptFn) s of
-                    Just x  -> pure (TlexAccepted x)
+                    Just x  -> do
+                        acc <- buildAccepted x
+                        mc <- tlexGetInputPart
+                        case mc of
+                            Nothing -> pure acc
+                            Just c  -> goTrans s c (Just acc)
                     Nothing -> do
                         mc <- tlexGetInputPart
                         case mc of
                             Nothing -> pure TlexEndOfInput
-                            Just c  -> goTrans s c
+                            Just c  -> goTrans s c Nothing
 
-                goTrans s c = case $(tlexTransFn) s c of
-                    $(pure do TH.LitP outputEndOfState) ->
-                        pure TlexError
-                    ns ->
-                        case $(tlexAcceptFn) ns of
-                            Just x -> pure (TlexAccepted x)
-                            Nothing -> do
-                                mc <- tlexGetInputPart
-                                case mc of
-                                    Nothing -> pure TlexError
-                                    Just nc -> goTrans ns nc
+                goTrans s c preAccepted = case $(tlexTransFn) s c of
+                    -1 -> goEnd preAccepted
+                    ns -> do
+                        nacc <- case $(tlexAcceptFn) ns of
+                            Just x -> do
+                                acc <- buildAccepted x
+                                pure (Just acc)
+                            Nothing -> pure preAccepted
+                        mc <- tlexGetInputPart
+                        case mc of
+                            Nothing -> goEnd nacc
+                            Just nc -> goTrans ns nc nacc
+
+                buildAccepted x = do
+                    m <- tlexGetMark
+                    pure (TlexAccepted m x)
+
+                goEnd preAccepted = case preAccepted of
+                    Nothing  -> pure TlexError
+                    Just acc -> pure acc
             |]
 
         , TH.SigD tlexInitialFnName <$>
