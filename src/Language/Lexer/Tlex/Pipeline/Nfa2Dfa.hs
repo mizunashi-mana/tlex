@@ -12,8 +12,6 @@ import qualified Language.Lexer.Tlex.Machine.NFA   as NFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
 
-import qualified Debug.Trace                       as Debug
-
 
 nfa2Dfa :: NFA.NFA a -> DFA.DFA a
 nfa2Dfa nfa = DFA.buildDFA
@@ -73,12 +71,10 @@ nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
 
         buildStateMap = \case
             []                   -> pure ()
-            (dfaSn, nfaSs):rest0 -> Debug.trace
-                do "pre: " ++ show do (dfaSn, nfaSs):rest0
-                do
-                    (rest1, dst) <- buildDFAState nfaSs rest0
-                    liftBuilderOp do DFA.insertTrans dfaSn dst
-                    buildStateMap rest1
+            (dfaSn, nfaSs):rest0 -> do
+                (rest1, dst) <- buildDFAState nfaSs rest0
+                liftBuilderOp do DFA.insertTrans dfaSn dst
+                buildStateMap rest1
 
         buildDFAState nfaSs0 rest0 = do
             (accs1, trans1, otherTrans1) <- foldM
@@ -128,7 +124,7 @@ nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
                     }
                 )
 
-        insertTrans (trans0, otherTrans0) (r, nfaSn) = Debug.trace ("insertTrans: " ++ show r) case CharSet.toElements r of
+        insertTrans (trans0, otherTrans0) (r, nfaSn) = case CharSet.toElements r of
             CharSet.StraightChars cs ->
                 let ~newTrans = insertNfaSn nfaSn otherTrans0
                     trans1 = foldl'

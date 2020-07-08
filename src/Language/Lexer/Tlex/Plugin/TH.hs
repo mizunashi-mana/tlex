@@ -10,6 +10,7 @@ module Language.Lexer.Tlex.Plugin.TH (
     thLexRule,
     outputScanner,
     InputString (..),
+    InputStringContext (..),
     runInputString,
 ) where
 
@@ -55,11 +56,11 @@ buildTHScanner startStateTy actionTy builder =
         , thScannerTlexScanner = tlexScanner
         }
 
-buildTHScannerWithReify :: forall s a. Typeable s => Typeable a => THScannerBuilder s a () -> THScanner
-buildTHScannerWithReify builder =
-    let startStateTy = TypeableTH.liftTypeFromTypeable do Proxy @s
-        actionTy = TypeableTH.liftTypeFromTypeable do Proxy @s
-        outputCtx = TlexTH.OutputContext
+buildTHScannerWithReify :: forall s a. Typeable s => Typeable a => THScannerBuilder s a () -> TH.Q THScanner
+buildTHScannerWithReify builder = do
+    startStateTy <- TypeableTH.liftTypeFromTypeable do Proxy @s
+    actionTy <- TypeableTH.liftTypeFromTypeable do Proxy @a
+    let outputCtx = TlexTH.OutputContext
             { outputCtxStartStateTy = startStateTy
             , outputCtxSemanticActionTy = actionTy
             }
@@ -70,10 +71,11 @@ buildTHScannerWithReify builder =
                         { thScannerBuilderCtxOutputCtx = outputCtx
                         , thScannerBuilderCtxTlexScannerBuilderCtx = ctx0
                         }
-    in THScanner
-        { thScannerOutputCtx = outputCtx
-        , thScannerTlexScanner = tlexScanner
-        }
+    pure do
+        THScanner
+            { thScannerOutputCtx = outputCtx
+            , thScannerTlexScanner = tlexScanner
+            }
 
 liftTlexScannerBuilder :: Tlex.ScannerBuilder s (TH.Q TH.Exp) a -> THScannerBuilder s f a
 liftTlexScannerBuilder builder = do
@@ -99,22 +101,37 @@ outputScanner scanner =
     in TlexTH.outputDfa outputCtx dfa
 
 
-newtype InputString a = InputString (State [Char] a)
+data InputStringContext = InputStringContext
+    { inputStringCtxRest :: [Char]
+    , inputStringCtxPos :: Int
+    }
+    deriving (Eq, Show)
+
+initialInputStringContext :: [Char] -> InputStringContext
+initialInputStringContext s = InputStringContext
+    { inputStringCtxRest = s
+    , inputStringCtxPos = 0
+    }
+
+newtype InputString a = InputString
+    { unInputString :: State InputStringContext a
+    }
     deriving Functor
-    deriving (Applicative, Monad) via State [Char]
+    deriving (Applicative, Monad) via State InputStringContext
 
+runInputString :: InputString a -> [Char] -> (a, InputStringContext)
+runInputString (InputString runner) input =
+    runState runner do initialInputStringContext input
 
-instance TlexTH.TlexContext [Char] InputString where
+instance TlexTH.TlexContext InputStringContext InputString where
     tlexGetInputPart = InputString do
-        input <- get
-        case input of
+        inputCtx <- get
+        case inputStringCtxRest inputCtx of
             []  -> pure Nothing
             c:r -> do
-                put r
+                put do InputStringContext
+                        { inputStringCtxRest = r
+                        , inputStringCtxPos = succ do inputStringCtxPos inputCtx
+                        }
                 pure do Just c
     tlexGetMark = InputString get
-
-runInputString :: InputString a -> [Char] -> ([Char], a)
-runInputString (InputString builder) input =
-    let (x, s) = runState builder input
-    in (s, x)

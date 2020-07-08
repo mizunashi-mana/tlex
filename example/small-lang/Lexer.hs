@@ -16,15 +16,22 @@ initialRule :: Tlex.Pattern -> TH.Q (TH.TExp LexerAction)
 initialRule = TlexTH.thLexRule [()]
 
 buildLexer :: TH.Q [TH.Dec]
-buildLexer = TlexTH.outputScanner
-    $ TlexTH.buildTHScannerWithReify lexerRules
+buildLexer = do
+    lexer <- TlexTH.buildTHScannerWithReify lexerRules
+    TlexTH.outputScanner lexer
 
 lexerRules :: TlexTH.THScannerBuilder LexerState () ()
 lexerRules = do
-    initialRule whitecharP [||()||]
+    initialRule (Tlex.someP whitecharP) [||()||]
+    initialRule specialP [||()||]
     initialRule reservedOpP [||()||]
     initialRule varidP [||()||]
     initialRule litIntegerP [||()||]
+
+specialP = charsP
+    [ '('
+    , ')'
+    ]
 
 whitecharP = charsP
     [ ' '

@@ -23,4 +23,3 @@ executable small-lang-lexer
         template-haskell,
     other-modules:
         Lexer
-        LexerSample

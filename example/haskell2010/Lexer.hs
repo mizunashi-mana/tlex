@@ -24,12 +24,13 @@ nestedCommentRule :: Tlex.Pattern -> TH.Q (TH.TExp LexerAction)
 nestedCommentRule = TlexTH.thLexRule [NestedComment]
 
 buildLexer :: TH.Q [TH.Dec]
-buildLexer = TlexTH.outputScanner
-    $ TlexTH.buildTHScannerWithReify lexerRules
+buildLexer = do
+    lexer <- TlexTH.buildTHScannerWithReify lexerRules
+    TlexTH.outputScanner lexer 
 
-lexerRules :: TlexTH.THScannerBuilder LexerState () ()
+lexerRules :: TlexTH.THScannerBuilder LexerState LexerAction ()
 lexerRules = do
-    initialRule whitecharP [||()||]
+    initialRule (Tlex.someP whitecharP) [||()||]
 
     initialRule commentP [||()||]
 
