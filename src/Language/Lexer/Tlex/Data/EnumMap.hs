@@ -10,6 +10,8 @@ module Language.Lexer.Tlex.Data.EnumMap (
     foldlWithKey',
     update,
     delete,
+    singleton,
+    unionWith,
 ) where
 
 import           Prelude            hiding (lookup)
@@ -22,6 +24,9 @@ newtype EnumMap k a = EnumMap (IntMap.IntMap a)
 
 empty :: Enum k => EnumMap k a
 empty = EnumMap IntMap.empty
+
+singleton :: Enum k => k -> a -> EnumMap k a
+singleton k x = EnumMap do IntMap.singleton (fromEnum k) x
 
 insert :: Enum k => k -> a -> EnumMap k a -> EnumMap k a
 insert k x (EnumMap m) = EnumMap do IntMap.insert (fromEnum k) x m
@@ -53,3 +58,6 @@ foldlWithKey' f acc0 (EnumMap m) = IntMap.foldlWithKey' (\acc i x -> f acc (toEn
 
 update :: Enum k => (a -> Maybe a) -> k -> EnumMap k a -> EnumMap k a
 update f k (EnumMap m) = EnumMap do IntMap.update f (fromEnum k) m
+
+unionWith :: Enum k => (a -> a -> a) -> EnumMap k a -> EnumMap k a -> EnumMap k a
+unionWith f (EnumMap m1) (EnumMap m2) = EnumMap do IntMap.unionWith f m1 m2

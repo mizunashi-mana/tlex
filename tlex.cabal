@@ -117,6 +117,7 @@ library
         Language.Lexer.Tlex.Machine.DFA
         Language.Lexer.Tlex.Pipeline.Pattern2Nfa
         Language.Lexer.Tlex.Pipeline.Nfa2Dfa
+        Language.Lexer.Tlex.Pipeline.MinDfa
         Language.Lexer.Tlex.Output.TH
         Language.Lexer.Tlex.Data.EnumSet
         Language.Lexer.Tlex.Data.EnumMap

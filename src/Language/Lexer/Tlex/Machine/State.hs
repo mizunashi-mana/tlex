@@ -9,12 +9,18 @@ module Language.Lexer.Tlex.Machine.State (
     setToList,
     nullSet,
     insertSet,
+    intersectSet,
+    diffSet,
+    unionSet,
+    lengthSet,
+    memberSet,
 
     StateMap,
     emptyMap,
     insertOrUpdateMap,
     insertMap,
     lookupMap,
+    assocsMap,
 
     StateArray,
     totalStateMapToArray,
@@ -69,6 +75,21 @@ setToList (StateSet ss) = coerce do IntSet.toList ss
 nullSet :: StateSet -> Bool
 nullSet (StateSet ss) = IntSet.null ss
 
+intersectSet :: StateSet -> StateSet -> StateSet
+intersectSet (StateSet ss1) (StateSet ss2) = StateSet do IntSet.intersection ss1 ss2
+
+diffSet :: StateSet -> StateSet -> StateSet
+diffSet (StateSet ss1) (StateSet ss2) = StateSet do IntSet.difference ss1 ss2
+
+unionSet :: StateSet -> StateSet -> StateSet
+unionSet (StateSet ss1) (StateSet ss2) = StateSet do IntSet.union ss1 ss2
+
+lengthSet :: StateSet -> Int
+lengthSet (StateSet ss) = IntSet.size ss
+
+memberSet :: StateNum -> StateSet -> Bool
+memberSet (StateNum s) (StateSet ss) = IntSet.member s ss
+
 
 newtype StateMap a = StateMap (IntMap.IntMap a)
     deriving (Eq, Show, Functor)
@@ -86,6 +107,9 @@ insertOrUpdateMap (StateNum k) ~dx ~uf (StateMap m) = StateMap case IntMap.looku
 
 lookupMap :: StateNum -> StateMap a -> Maybe a
 lookupMap (StateNum sn) (StateMap m) = IntMap.lookup sn m
+
+assocsMap :: StateMap a -> [(StateNum, a)]
+assocsMap (StateMap m) = coerce do IntMap.assocs m
 
 
 newtype StateArray a = StateArray (Array.Array Int a)
