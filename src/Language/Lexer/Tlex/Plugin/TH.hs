@@ -22,6 +22,7 @@ import qualified Language.Lexer.Tlex.Machine.NFA          as NFA
 import qualified Language.Lexer.Tlex.Output.TH            as TlexTH
 import qualified Language.Lexer.Tlex.Pipeline.Nfa2Dfa     as TlexPipeline
 import qualified Language.Lexer.Tlex.Pipeline.Pattern2Nfa as TlexPipeline
+import qualified Language.Lexer.Tlex.Pipeline.MinDfa as TlexPipeline
 import qualified Language.Lexer.Tlex.Syntax               as Tlex
 
 
@@ -98,7 +99,8 @@ outputScanner scanner =
         nfa = NFA.buildNFA do
             TlexPipeline.scanner2Nfa do thScannerTlexScanner scanner
         dfa = TlexPipeline.nfa2Dfa nfa
-    in TlexTH.outputDfa outputCtx dfa
+        minDfa = TlexPipeline.minDfa dfa
+    in TlexTH.outputDfa outputCtx minDfa
 
 
 data InputStringContext = InputStringContext

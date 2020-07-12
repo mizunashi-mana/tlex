@@ -13,8 +13,146 @@ import qualified Language.Lexer.Tlex.Syntax as Tlex
 
 
 minDfa :: DFA.DFA a -> DFA.DFA a
-minDfa dfa = undefined p where
-    p = buildPartition dfa
+minDfa dfa = DFA.buildDFA
+    do modify' \dfaBuilderCtx0 -> minDfaCtxDFABuilderCtx
+        do execState
+            do minDfaM dfa
+            do MinDfaContext
+                { minDfaCtxStateMap = MState.emptyMap
+                , minDfaCtxDFABuilderCtx = dfaBuilderCtx0
+                }
+
+
+data MinDfaContext m = MinDfaContext
+    { minDfaCtxStateMap      :: MState.StateMap MState.StateNum
+    , minDfaCtxDFABuilderCtx :: DFA.DFABuilderContext m
+    }
+
+type MinDfaM m = State (MinDfaContext m)
+
+liftBuilderOp :: DFA.DFABuilder m a -> MinDfaM m a
+liftBuilderOp builder = do
+    ctx0 <- get
+    let (x, builderCtx1) = runState builder do minDfaCtxDFABuilderCtx ctx0
+    put do ctx0
+            { minDfaCtxDFABuilderCtx = builderCtx1
+            }
+    pure x
+
+registerNewState :: MState.StateNum -> MinDfaM m MState.StateNum
+registerNewState r = do
+    sn <- liftBuilderOp DFA.newStateNum
+    modify' \ctx0@MinDfaContext{ minDfaCtxStateMap } -> ctx0
+        { minDfaCtxStateMap = MState.insertMap r sn minDfaCtxStateMap
+        }
+    pure sn
+
+getOrRegisterState :: MState.StateNum -> MinDfaM m MState.StateNum
+getOrRegisterState r = do
+    ctx0 <- get
+    case MState.lookupMap r do minDfaCtxStateMap ctx0 of
+        Just sn -> pure sn
+        Nothing -> registerNewState r
+
+minDfaM :: DFA.DFA a -> MinDfaM a ()
+minDfaM dfa@DFA.DFA{ dfaTrans } = do
+    forM_
+        do EnumMap.assocs do DFA.dfaInitials dfa
+        do \(startS, sn) -> do
+            newSn <- getOrRegisterStateByOldState sn
+            liftBuilderOp do DFA.initial newSn startS
+
+    forM_
+        do MState.assocsMap do partitionMember p
+        do \(r, ss) -> do
+            newSn <- getOrRegisterState r
+            newDst <- buildDFAState ss
+            liftBuilderOp do DFA.insertTrans newSn newDst
+    where
+        p = buildPartition dfa
+
+        getOrRegisterStateByOldState oldSn =
+            let r = case MState.lookupMap oldSn do partitionMap p of
+                    Nothing -> error "unreachable"
+                    Just s  -> s
+            in getOrRegisterState r
+
+        buildDFAState ss = buildDst do
+            forM_
+                do MState.setToList ss
+                do \s -> do
+                    let dst = MState.indexArray dfaTrans s
+                    forM_
+                        do DFA.dstAccepts dst
+                        do \acc -> insertAcceptToDst acc
+
+                    forM_
+                        do EnumMap.assocs do DFA.dstTrans dst
+                        do \(c, sn) -> do
+                            ctx <- get
+                            let trans = dstBuilderCtxTrans ctx
+                            case EnumMap.lookup c trans of
+                                Just{}  -> pure ()
+                                Nothing -> do
+                                    newSn <- liftMinDfaOp do getOrRegisterStateByOldState sn
+                                    put do ctx
+                                            { dstBuilderCtxTrans = EnumMap.insert c newSn trans
+                                            }
+
+                    case DFA.dstOtherTrans dst of
+                        Nothing -> pure ()
+                        Just sn -> do
+                            ctx <- get
+                            case dstBuilderCtxOtherTrans ctx of
+                                Just{}  -> pure ()
+                                Nothing -> do
+                                    newSn <- liftMinDfaOp do getOrRegisterStateByOldState sn
+                                    put do ctx
+                                            { dstBuilderCtxOtherTrans = Just newSn
+                                            }
+
+data DFAStateBuilderContext a = DStateBuilderContext
+    { dstBuilderCtxAccepts    :: EnumMap.EnumMap Tlex.AcceptPriority (Tlex.Accept a)
+    , dstBuilderCtxTrans      :: EnumMap.EnumMap Char MState.StateNum
+    , dstBuilderCtxOtherTrans :: Maybe MState.StateNum
+    , dstBuilderCtxMinDfaCtx  :: MinDfaContext a
+    }
+
+type DFAStateBuilder a = State (DFAStateBuilderContext a)
+
+buildDst :: DFAStateBuilder a () -> MinDfaM a (DFA.DFAState a)
+buildDst builder = do
+    minDfaCtx0 <- get
+    let ctx = execState builder do
+            DStateBuilderContext
+                { dstBuilderCtxAccepts = EnumMap.empty
+                , dstBuilderCtxTrans = EnumMap.empty
+                , dstBuilderCtxOtherTrans = Nothing
+                , dstBuilderCtxMinDfaCtx = minDfaCtx0
+                }
+    put do dstBuilderCtxMinDfaCtx ctx
+    pure DFA.DState
+        { DFA.dstAccepts = [ acc | (_, acc) <- EnumMap.toDescList do dstBuilderCtxAccepts ctx ]
+        , DFA.dstTrans   = dstBuilderCtxTrans ctx
+        , DFA.dstOtherTrans = dstBuilderCtxOtherTrans ctx
+        }
+
+liftMinDfaOp :: MinDfaM m a -> DFAStateBuilder m a
+liftMinDfaOp builder = do
+    ctx0 <- get
+    let (x, builderCtx1) = runState builder do dstBuilderCtxMinDfaCtx ctx0
+    put do ctx0
+            { dstBuilderCtxMinDfaCtx = builderCtx1
+            }
+    pure x
+
+insertAcceptToDst :: Tlex.Accept a -> DFAStateBuilder a ()
+insertAcceptToDst acc = modify' \builder -> builder
+    { dstBuilderCtxAccepts = EnumMap.insert
+        do Tlex.accPriority acc
+        do acc
+        do dstBuilderCtxAccepts builder
+    }
 
 
 data Partition = Partition
@@ -62,7 +200,8 @@ buildPartition dfa =
         go2 a p0 q0 = foldl'
             do \(p, q) x -> go3 p q x
             do (p0, q0)
-            do [ x | (_, x) <- EnumMap.assocs do findIncomingTrans a ]
+            let rt = findIncomingTrans a
+            in dfaRevTransOther rt:[ x | (_, x) <- EnumMap.assocs do dfaRevTrans rt ]
 
         go3 p0 q0 x = foldl'
             do \(p, q) (sp, xy) ->
@@ -114,19 +253,37 @@ buildPartition dfa =
             do MState.setToList x
 
         findIncomingTrans ss = foldl'
-            do \m s -> case MState.lookupMap s rtrans of
-                Nothing -> m
-                Just ms -> EnumMap.unionWith MState.unionSet m ms
-            do EnumMap.empty
+            do \rt0 s -> case MState.lookupMap s rtrans of
+                Nothing -> rt0
+                Just rt -> DFARevTrans
+                    { dfaRevTrans = EnumMap.mergeWithKey
+                        do \_ ss1 ss2 -> Just do MState.unionSet ss1 ss2
+                        do \t1 -> t1 <&> \ss1 -> MState.unionSet ss1
+                            do dfaRevTransOther rt
+                        do \t2 -> t2 <&> \ss2 -> MState.unionSet ss2
+                            do dfaRevTransOther rt0
+                        do dfaRevTrans rt0
+                        do dfaRevTrans rt
+                    , dfaRevTransOther = MState.unionSet
+                        do dfaRevTransOther rt0
+                        do dfaRevTransOther rt
+                    }
+            do DFARevTrans
+                { dfaRevTrans = EnumMap.empty
+                , dfaRevTransOther = MState.emptySet
+                }
             do MState.setToList ss
 
         rtrans = revTrans dfa
 
-acceptGroup :: DFA.DFA a -> HashMap.HashMap (Maybe (Tlex.Accept a)) MState.StateSet
+acceptGroup :: DFA.DFA a -> HashMap.HashMap (Maybe Tlex.AcceptPriority) MState.StateSet
 acceptGroup DFA.DFA{ dfaTrans } = foldl'
     do \m (s, dst) -> case DFA.dstAccepts dst of
         []    -> insertState Nothing s m
-        acc:_ -> insertState (Just acc) s m
+        acc:_ -> insertState
+            do Just do Tlex.accPriority acc
+            do s
+            do m
     do HashMap.empty
     do MState.arrayAssocs dfaTrans
     where
@@ -138,19 +295,51 @@ acceptGroup DFA.DFA{ dfaTrans } = foldl'
                 do MState.insertSet s ss
                 do m
 
-revTrans :: DFA.DFA a -> MState.StateMap (EnumMap.EnumMap Char MState.StateSet)
+data DFARevTrans a = DFARevTrans
+    { dfaRevTrans :: EnumMap.EnumMap Char MState.StateSet
+    , dfaRevTransOther :: MState.StateSet
+    }
+
+revTrans :: DFA.DFA a -> MState.StateMap (DFARevTrans a)
 revTrans DFA.DFA{ dfaTrans } = foldl'
-    do \m0 (sf, dst) -> foldl'
-        do \m (c, st) -> insertTrans sf c st m
-        do m0
-        do EnumMap.assocs do DFA.dstTrans dst
+    do \m0 (sf, dst) ->
+        let trans = DFA.dstTrans dst
+            m1 = foldl'
+                do \m (c, st) -> insertTrans sf c st m
+                do m0
+                do EnumMap.assocs trans
+        in case DFA.dstOtherTrans dst of
+            Nothing -> m1
+            Just st -> insertOtherTrans sf st trans m1
     do MState.emptyMap
     do MState.arrayAssocs dfaTrans
     where
-        insertTrans sf c st m = MState.insertOrUpdateMap st
-            do EnumMap.singleton c do MState.singletonSet sf
-            do \cm -> EnumMap.insertOrUpdate c
-                do MState.singletonSet sf
-                do \ss -> MState.insertSet sf ss
-                do cm
-            do m
+        insertTrans sf c st m0 = MState.insertOrUpdateMap st
+            do DFARevTrans
+                { dfaRevTrans = EnumMap.singleton c do MState.singletonSet sf
+                , dfaRevTransOther = MState.emptySet
+                }
+            do \rtrans -> rtrans
+                { dfaRevTrans = EnumMap.insertOrUpdate c
+                    do MState.insertSet sf do dfaRevTransOther rtrans
+                    do \ss -> MState.insertSet sf ss
+                    do dfaRevTrans rtrans
+                }
+            do m0
+
+        insertOtherTrans sf st trans m0 = MState.insertOrUpdateMap st
+            do DFARevTrans
+                { dfaRevTrans = trans <&> \_ -> MState.emptySet
+                , dfaRevTransOther = MState.singletonSet sf
+                }
+            do \rtrans -> DFARevTrans
+                { dfaRevTrans = EnumMap.mergeWithKey
+                    do \_ ss _ -> Just ss
+                    do \rt -> rt <&> \ss -> MState.insertSet sf ss
+                    do \t -> t <&> \_ -> dfaRevTransOther rtrans
+                    do dfaRevTrans rtrans
+                    do trans
+                , dfaRevTransOther = MState.insertSet sf
+                    do dfaRevTransOther rtrans
+                }
+            do m0

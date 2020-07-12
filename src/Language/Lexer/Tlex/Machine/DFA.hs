@@ -15,6 +15,7 @@ import           Language.Lexer.Tlex.Prelude
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
+import qualified Data.List as List
 
 
 data DFA a = DFA
@@ -89,7 +90,10 @@ accept s x = modify' \ctx0@DFABuilderContext{ dfaBCtxStateMap } -> ctx0
                 , dstOtherTrans = Nothing
                 }
             do \ds@DState { dstAccepts } -> ds
-                { dstAccepts = x:dstAccepts
+                { dstAccepts = List.insertBy
+                    Tlex.compareAcceptsByPriority
+                    x
+                    dstAccepts
                 }
             do n
 

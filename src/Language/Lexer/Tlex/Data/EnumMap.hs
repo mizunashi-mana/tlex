@@ -12,15 +12,20 @@ module Language.Lexer.Tlex.Data.EnumMap (
     delete,
     singleton,
     unionWith,
+    mapWithKey,
+    mergeWithKey,
 ) where
 
 import           Prelude            hiding (lookup)
 
+import qualified Data.Coerce        as Coerce
 import qualified Data.IntMap.Strict as IntMap
 
 
-newtype EnumMap k a = EnumMap (IntMap.IntMap a)
-    deriving (Eq, Show)
+newtype EnumMap k a = EnumMap
+    { unEnumMap :: IntMap.IntMap a
+    }
+    deriving (Eq, Show, Functor)
 
 empty :: Enum k => EnumMap k a
 empty = EnumMap IntMap.empty
@@ -61,3 +66,22 @@ update f k (EnumMap m) = EnumMap do IntMap.update f (fromEnum k) m
 
 unionWith :: Enum k => (a -> a -> a) -> EnumMap k a -> EnumMap k a -> EnumMap k a
 unionWith f (EnumMap m1) (EnumMap m2) = EnumMap do IntMap.unionWith f m1 m2
+
+mapWithKey :: Enum k => (k -> a -> b) -> EnumMap k a -> EnumMap k b
+mapWithKey f (EnumMap m) = EnumMap do
+    IntMap.mapWithKey
+        do \i x -> f (toEnum i) x
+        do m
+
+mergeWithKey :: Enum k
+    => (k -> a -> b -> Maybe c)
+    -> (EnumMap k a -> EnumMap k c)
+    -> (EnumMap k b -> EnumMap k c)
+    -> EnumMap k a -> EnumMap k b -> EnumMap k c
+mergeWithKey f g1 g2 (EnumMap m1) (EnumMap m2) = EnumMap do
+    IntMap.mergeWithKey
+        do \i x y -> f (toEnum i) x y
+        do \m -> Coerce.coerce g1 m
+        do \m -> Coerce.coerce g2 m
+        do m1
+        do m2

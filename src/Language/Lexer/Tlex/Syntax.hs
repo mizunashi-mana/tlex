@@ -14,6 +14,7 @@ module Language.Lexer.Tlex.Syntax (
     AcceptPriority,
     mostPriority,
     Accept (..),
+    compareAcceptsByPriority,
     StartState,
     startStateFromEnum,
 ) where
@@ -75,17 +76,10 @@ data Accept a = Accept
     { accPriority       :: AcceptPriority
     , accSemanticAction :: a
     }
-    deriving (Show, Functor)
+    deriving (Eq, Show, Functor)
 
-instance Eq (Accept a) where
-    Accept{ accPriority = p1 } == Accept{ accPriority = p2 } = p1 == p2
-
-instance Ord (Accept a) where
-    Accept{ accPriority = p1 } `compare` Accept{ accPriority = p2 } = p1 `compare` p2
-
-instance Hashable.Hashable (Accept a) where
-    hashWithSalt x Accept{ accPriority = p1 } = Hashable.hashWithSalt x p1
-
+compareAcceptsByPriority :: Accept a -> Accept a -> Ordering
+compareAcceptsByPriority Accept{ accPriority = p1 } Accept{ accPriority = p2 } = p1 `compare` p2
 
 -- |
 --
