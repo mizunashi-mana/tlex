@@ -17,7 +17,7 @@ import qualified Language.Lexer.Tlex.Data.EnumSet as EnumSet
 
 
 data SymEnumSet a = SymEnumSet
-    { isStraight :: Bool
+    { isStraight      :: Bool
     , internalEnumSet :: EnumSet.EnumSet a
     }
     deriving (Eq, Show)

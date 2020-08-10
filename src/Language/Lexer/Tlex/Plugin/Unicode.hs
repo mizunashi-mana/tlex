@@ -1,12 +1,12 @@
 module Language.Lexer.Tlex.Plugin.Unicode where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.CharSet                  as CharSet
-import qualified Data.IntSet                   as IntSet
-import qualified Data.Word                     as Word
-import qualified Data.String                   as String
-import qualified Language.Lexer.Tlex.Syntax    as Tlex
+import qualified Data.CharSet                as CharSet
+import qualified Data.IntSet                 as IntSet
+import qualified Data.String                 as String
+import qualified Data.Word                   as Word
+import qualified Language.Lexer.Tlex.Syntax  as Tlex
 
 
 type Pattern = Tlex.Pattern Word.Word8

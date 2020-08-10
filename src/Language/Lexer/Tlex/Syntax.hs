@@ -21,7 +21,7 @@ module Language.Lexer.Tlex.Syntax (
 
 import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.Hashable                    as Hashable
+import qualified Data.Hashable                       as Hashable
 import qualified Language.Lexer.Tlex.Data.SymEnumSet as SymEnumSet
 
 

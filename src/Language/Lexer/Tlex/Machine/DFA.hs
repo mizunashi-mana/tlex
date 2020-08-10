@@ -12,8 +12,8 @@ module Language.Lexer.Tlex.Machine.DFA (
 
 import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.List                         as List
 import qualified Data.IntMap                       as IntMap
+import qualified Data.List                         as List
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Syntax        as Tlex

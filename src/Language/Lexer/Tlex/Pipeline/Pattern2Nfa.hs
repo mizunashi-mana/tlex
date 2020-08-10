@@ -6,12 +6,12 @@ module Language.Lexer.Tlex.Pipeline.Pattern2Nfa (
 
 import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
-import qualified Language.Lexer.Tlex.Data.EnumSet as EnumSet
+import qualified Language.Lexer.Tlex.Data.EnumMap    as EnumMap
+import qualified Language.Lexer.Tlex.Data.EnumSet    as EnumSet
 import qualified Language.Lexer.Tlex.Data.SymEnumSet as SymEnumSet
-import qualified Language.Lexer.Tlex.Machine.NFA   as NFA
-import qualified Language.Lexer.Tlex.Machine.State as MState
-import qualified Language.Lexer.Tlex.Syntax        as Tlex
+import qualified Language.Lexer.Tlex.Machine.NFA     as NFA
+import qualified Language.Lexer.Tlex.Machine.State   as MState
+import qualified Language.Lexer.Tlex.Syntax          as Tlex
 
 
 pattern2Nfa

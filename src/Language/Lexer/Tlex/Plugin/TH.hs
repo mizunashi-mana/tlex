@@ -25,7 +25,7 @@ import qualified Language.Lexer.Tlex.Pipeline.Nfa2Dfa     as TlexPipeline
 import qualified Language.Lexer.Tlex.Pipeline.Pattern2Nfa as TlexPipeline
 import qualified Language.Lexer.Tlex.Syntax               as Tlex
 
-import qualified Debug.Trace as Debug
+import qualified Debug.Trace                              as Debug
 
 
 data THScanner e = THScanner
