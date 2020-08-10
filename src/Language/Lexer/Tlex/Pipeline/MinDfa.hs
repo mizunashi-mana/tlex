@@ -6,6 +6,7 @@ import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.HashMap.Strict               as HashMap
 import qualified Data.HashSet                      as HashSet
+import qualified Data.IntMap.Strict                as IntMap
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
@@ -88,15 +89,15 @@ minDfaM dfa@DFA.DFA{ dfaTrans } = do
                         do \acc -> insertAcceptToDst acc
 
                     forM_
-                        do EnumMap.assocs do DFA.dstTrans dst
+                        do IntMap.assocs do DFA.dstTrans dst
                         do \(c, sn) -> do
                             ctx0 <- get
-                            case EnumMap.lookup c do dstBuilderCtxTrans ctx0 of
+                            case IntMap.lookup c do dstBuilderCtxTrans ctx0 of
                                 Just{}  -> pure ()
                                 Nothing -> do
                                     newSn <- liftMinDfaOp do getOrRegisterStateByOldState sn
                                     modify' \ctx -> ctx
-                                        { dstBuilderCtxTrans = EnumMap.insert c newSn
+                                        { dstBuilderCtxTrans = IntMap.insert c newSn
                                             do dstBuilderCtxTrans ctx
                                         }
 
@@ -114,7 +115,7 @@ minDfaM dfa@DFA.DFA{ dfaTrans } = do
 
 data DFAStateBuilderContext a = DStateBuilderContext
     { dstBuilderCtxAccepts    :: EnumMap.EnumMap Tlex.AcceptPriority (Tlex.Accept a)
-    , dstBuilderCtxTrans      :: EnumMap.EnumMap Char MState.StateNum
+    , dstBuilderCtxTrans      :: IntMap.IntMap MState.StateNum
     , dstBuilderCtxOtherTrans :: Maybe MState.StateNum
     , dstBuilderCtxMinDfaCtx  :: MinDfaContext a
     }
@@ -128,7 +129,7 @@ buildDst builder = do
     let ctx = execState builder do
             DStateBuilderContext
                 { dstBuilderCtxAccepts = EnumMap.empty
-                , dstBuilderCtxTrans = EnumMap.empty
+                , dstBuilderCtxTrans = IntMap.empty
                 , dstBuilderCtxOtherTrans = Nothing
                 , dstBuilderCtxMinDfaCtx = minDfaCtx0
                 }
@@ -209,7 +210,7 @@ buildPartition dfa =
                 HashSet.fromList
                     [ x
                     | x <- dfaRevTransOther rt:
-                        [ x | (_, x) <- EnumMap.assocs do dfaRevTrans rt ]
+                        [ x | (_, x) <- IntMap.assocs do dfaRevTrans rt ]
                     , not do MState.nullSet x
                     ]
 
@@ -266,7 +267,7 @@ buildPartition dfa =
             do \rt0 s -> case MState.lookupMap s rtrans of
                 Nothing -> rt0
                 Just rt -> DFARevTrans
-                    { dfaRevTrans = EnumMap.mergeWithKey
+                    { dfaRevTrans = IntMap.mergeWithKey
                         do \_ ss1 ss2 -> Just do MState.unionSet ss1 ss2
                         do \t1 -> t1 <&> \ss1 -> MState.unionSet ss1
                             do dfaRevTransOther rt
@@ -279,7 +280,7 @@ buildPartition dfa =
                         do dfaRevTransOther rt
                     }
             do DFARevTrans
-                { dfaRevTrans = EnumMap.empty
+                { dfaRevTrans = IntMap.empty
                 , dfaRevTransOther = MState.emptySet
                 }
             do MState.setToList ss
@@ -305,8 +306,9 @@ acceptGroup DFA.DFA{ dfaTrans } = foldl'
                 do MState.insertSet s ss
                 do m
 
+
 data DFARevTrans a = DFARevTrans
-    { dfaRevTrans      :: EnumMap.EnumMap Char MState.StateSet
+    { dfaRevTrans      :: IntMap.IntMap MState.StateSet
     , dfaRevTransOther :: MState.StateSet
     }
 
@@ -317,7 +319,7 @@ revTrans DFA.DFA{ dfaTrans } = foldl'
             m1 = foldl'
                 do \m (c, st) -> insertTrans sf c st m
                 do m0
-                do EnumMap.assocs trans
+                do IntMap.assocs trans
         in case DFA.dstOtherTrans dst of
             Nothing -> m1
             Just st -> insertOtherTrans sf st trans m1
@@ -326,15 +328,20 @@ revTrans DFA.DFA{ dfaTrans } = foldl'
     where
         insertTrans sf c st m0 = MState.insertOrUpdateMap st
             do DFARevTrans
-                { dfaRevTrans = EnumMap.singleton c do MState.singletonSet sf
+                { dfaRevTrans = IntMap.singleton c do MState.singletonSet sf
                 , dfaRevTransOther = MState.emptySet
                 }
-            do \rtrans -> rtrans
-                { dfaRevTrans = EnumMap.insertOrUpdate c
-                    do MState.insertSet sf do dfaRevTransOther rtrans
-                    do \ss -> MState.insertSet sf ss
-                    do dfaRevTrans rtrans
-                }
+            do \rtrans ->
+                let rtransRevTrans = dfaRevTrans rtrans
+                in rtrans
+                    { dfaRevTrans = case IntMap.lookup c rtransRevTrans of
+                        Nothing -> IntMap.insert c
+                            do MState.insertSet sf do dfaRevTransOther rtrans
+                            do rtransRevTrans
+                        Just ss -> IntMap.insert c
+                            do MState.insertSet sf ss
+                            do rtransRevTrans
+                    }
             do m0
 
         insertOtherTrans sf st trans m0 = MState.insertOrUpdateMap st
@@ -343,7 +350,7 @@ revTrans DFA.DFA{ dfaTrans } = foldl'
                 , dfaRevTransOther = MState.singletonSet sf
                 }
             do \rtrans -> DFARevTrans
-                { dfaRevTrans = EnumMap.mergeWithKey
+                { dfaRevTrans = IntMap.mergeWithKey
                     do \_ ss _ -> Just ss
                     do \rt -> rt <&> \ss -> MState.insertSet sf ss
                     do \t -> t <&> \_ -> dfaRevTransOther rtrans

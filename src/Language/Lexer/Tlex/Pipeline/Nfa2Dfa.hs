@@ -5,6 +5,7 @@ module Language.Lexer.Tlex.Pipeline.Nfa2Dfa (
 import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.HashMap.Strict               as HashMap
+import qualified Data.IntMap.Strict                as IntMap
 import qualified Language.Lexer.Tlex.Data.CharSet  as CharSet
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
@@ -105,8 +106,8 @@ nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
             (rest1, trans2) <- foldM
                 do \(rest, trans) (c, nfaSs) -> do
                     (rest', dfaSn) <- getOrRegisterNfaSs nfaSs rest
-                    pure (rest', EnumMap.insert c dfaSn trans)
-                do (rest0, EnumMap.empty)
+                    pure (rest', IntMap.insert (fromEnum c) dfaSn trans)
+                do (rest0, IntMap.empty)
                 do EnumMap.assocs trans1
 
             (rest2, otherTrans2) <- case MState.nullSet otherTrans1 of

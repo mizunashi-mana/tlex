@@ -13,6 +13,7 @@ module Language.Lexer.Tlex.Machine.DFA (
 import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.List                         as List
+import qualified Data.IntMap                       as IntMap
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
@@ -31,7 +32,7 @@ data DFA a = DFA
 --
 data DFAState a = DState
     { dstAccepts    :: [Tlex.Accept a]
-    , dstTrans      :: EnumMap.EnumMap Char MState.StateNum
+    , dstTrans      :: IntMap.IntMap MState.StateNum
     , dstOtherTrans :: Maybe MState.StateNum
     }
     deriving (Eq, Show, Functor)
@@ -87,7 +88,7 @@ accept s x = modify' \ctx0@DFABuilderContext{ dfaBCtxStateMap } -> ctx0
         addAccept n = MState.insertOrUpdateMap s
             do DState
                 { dstAccepts = [x]
-                , dstTrans = EnumMap.empty
+                , dstTrans = IntMap.empty
                 , dstOtherTrans = Nothing
                 }
             do \ds@DState { dstAccepts } -> ds

@@ -9,6 +9,7 @@ module Language.Lexer.Tlex.Output.TH (
 
 import           Language.Lexer.Tlex.Prelude
 
+import qualified Data.IntMap.Strict                as IntMap
 import qualified Language.Haskell.TH               as TH
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
@@ -194,10 +195,10 @@ outputTlexTransFn DFA.DFA{ dfaTrans } fnName = TH.FunD fnName
                     (sf, dst) <- MState.arrayAssocs dfaTrans
                     let sfP = TH.LitP do outputStateNum sf
                     [ pure do
-                        TH.Clause [sfP, TH.LitP do TH.CharL c]
+                        TH.Clause [sfP, TH.LitP do TH.CharL do toEnum c]
                             do TH.NormalB do TH.LitE do outputStateNum st
                             do []
-                        | (c, st) <- EnumMap.assocs do DFA.dstTrans dst
+                        | (c, st) <- IntMap.assocs do DFA.dstTrans dst
                         ]
                         ++
                         case DFA.dstOtherTrans dst of
