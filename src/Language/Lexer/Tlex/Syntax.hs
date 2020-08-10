@@ -22,36 +22,36 @@ module Language.Lexer.Tlex.Syntax (
 import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.Hashable                    as Hashable
-import qualified Language.Lexer.Tlex.Data.CharSet as CharSet
+import qualified Language.Lexer.Tlex.Data.SymEnumSet as SymEnumSet
 
 
-newtype Scanner a = Scanner
-    { scannerRules :: [ScanRule a]
+newtype Scanner e a = Scanner
+    { scannerRules :: [ScanRule e a]
     }
     deriving (Eq, Show, Functor)
 
-data ScanRule a = ScanRule
+data ScanRule e a = ScanRule
     { scanRuleStartStates    :: [StartState]
-    , scanRulePattern        :: Pattern
+    , scanRulePattern        :: Pattern e
     , scanRuleSemanticAction :: a
     }
     deriving (Eq, Show, Functor)
 
 
-buildScanner :: ScannerBuilder s f () -> Scanner f
+buildScanner :: Enum e => ScannerBuilder s e f () -> Scanner e f
 buildScanner builder = Scanner
     { scannerRules = unScannerBuilderContext
         do execState builder do ScannerBuilderContext []
     }
 
-newtype ScannerBuilderContext s f = ScannerBuilderContext
-    { unScannerBuilderContext :: [ScanRule f]
+newtype ScannerBuilderContext s e f = ScannerBuilderContext
+    { unScannerBuilderContext :: [ScanRule e f]
     }
     deriving (Eq, Show, Functor)
 
-type ScannerBuilder s f = State (ScannerBuilderContext s f)
+type ScannerBuilder s e f = State (ScannerBuilderContext s e f)
 
-lexRule :: Enum s => [s] -> Pattern -> f -> ScannerBuilder s f ()
+lexRule :: Enum s => Enum e => [s] -> Pattern e -> f -> ScannerBuilder s e f ()
 lexRule ss p act = modify' \(ScannerBuilderContext rs0) ->
     ScannerBuilderContext do ScanRule [startStateFromEnum s | s <- ss] p act:rs0
 
@@ -87,34 +87,34 @@ compareAcceptsByPriority Accept{ accPriority = p1 } Accept{ accPriority = p2 } =
 -- * support byte range.
 -- * support unicode category.
 --
-data Pattern
+data Pattern e
     = Empty
-    | Pattern :^: Pattern
-    | Pattern :|: Pattern
-    | Many Pattern
-    | Range CharSet.CharSet
+    | Pattern e :^: Pattern e
+    | Pattern e :|: Pattern e
+    | Many (Pattern e)
+    | Range (SymEnumSet.SymEnumSet e)
     deriving (Eq, Show)
 
-instance Semigroup Pattern where
+instance Enum e => Semigroup (Pattern e) where
     (<>) = (:^:)
 
-instance Monoid Pattern where
+instance Enum e => Monoid (Pattern e) where
     mempty = Empty
 
-anyoneP :: Pattern
-anyoneP = Range CharSet.full
+anyoneP :: Enum e => Pattern e
+anyoneP = Range SymEnumSet.full
 
-maybeP :: Pattern -> Pattern
+maybeP :: Enum e => Pattern e -> Pattern e
 maybeP x = orP [Empty, x]
 
-someP :: Pattern -> Pattern
+someP :: Enum e => Pattern e -> Pattern e
 someP x = x <> Many x
 
-manyP :: Pattern -> Pattern
+manyP :: Enum e => Pattern e -> Pattern e
 manyP x = Many x
 
 {-# INLINE orP #-}
-orP :: [Pattern] -> Pattern
+orP :: Enum e => [Pattern e] -> Pattern e
 orP = \case
   []   -> Empty
   p:ps -> foldr (:|:) p ps

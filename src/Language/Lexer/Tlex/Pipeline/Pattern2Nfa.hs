@@ -7,17 +7,27 @@ module Language.Lexer.Tlex.Pipeline.Pattern2Nfa (
 import           Language.Lexer.Tlex.Prelude
 
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
+import qualified Language.Lexer.Tlex.Data.EnumSet as EnumSet
+import qualified Language.Lexer.Tlex.Data.SymEnumSet as SymEnumSet
 import qualified Language.Lexer.Tlex.Machine.NFA   as NFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
 
 
 pattern2Nfa
-    :: MState.StateNum -> MState.StateNum -> Tlex.Pattern -> NFA.NFABuilder m ()
+    :: Enum e
+    => MState.StateNum -> MState.StateNum -> Tlex.Pattern e -> NFA.NFABuilder m ()
 pattern2Nfa = go where
     go b e = \case
         Tlex.Empty -> NFA.epsilonTrans b e
-        Tlex.Range cs -> NFA.condTrans b cs e
+        Tlex.Range s -> NFA.condTrans b
+            do
+                let (isStraight, es) = SymEnumSet.toEnumSet s
+                NFA.NFAStateTrans
+                    { NFA.nstTransIsStraight = isStraight
+                    , NFA.nstTransRange = EnumSet.toIntSet es
+                    , NFA.nstTransNextState = e
+                    }
         p1 Tlex.:^: p2 -> do
             s <- NFA.newStateNum
             pattern2Nfa b s p1
@@ -32,7 +42,8 @@ pattern2Nfa = go where
             NFA.epsilonTrans s e
 
 scanRule2Nfa
-    :: Tlex.AcceptPriority -> MState.StateNum -> Tlex.ScanRule m -> NFA.NFABuilder m ()
+    :: Enum e
+    => Tlex.AcceptPriority -> MState.StateNum -> Tlex.ScanRule e m -> NFA.NFABuilder m ()
 scanRule2Nfa p b r = do
     e <- NFA.newStateNum
     pattern2Nfa b e do Tlex.scanRulePattern r
@@ -43,7 +54,7 @@ scanRule2Nfa p b r = do
             , accSemanticAction = Tlex.scanRuleSemanticAction r
             }
 
-scanner2Nfa :: Tlex.Scanner m -> NFA.NFABuilder m ()
+scanner2Nfa :: Enum e => Tlex.Scanner e m -> NFA.NFABuilder m ()
 scanner2Nfa Tlex.Scanner{ scannerRules } = foldM_
     do \(p, bs, is) scanRule -> aggScanRule p bs is scanRule
     do (Tlex.mostPriority, [], EnumMap.empty)

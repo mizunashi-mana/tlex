@@ -28,20 +28,20 @@ import qualified Language.Lexer.Tlex.Syntax               as Tlex
 import qualified Debug.Trace as Debug
 
 
-data THScanner = THScanner
+data THScanner e = THScanner
     { thScannerOutputCtx   :: TlexTH.OutputContext
-    , thScannerTlexScanner :: Tlex.Scanner (TH.Q TH.Exp)
+    , thScannerTlexScanner :: Tlex.Scanner e (TH.Q TH.Exp)
     }
 
 
-data THScannerBuilderContext s a = THScannerBuilderContext
+data THScannerBuilderContext s e a = THScannerBuilderContext
     { thScannerBuilderCtxOutputCtx :: TlexTH.OutputContext
-    , thScannerBuilderCtxTlexScannerBuilderCtx :: Tlex.ScannerBuilderContext s (TH.Q TH.Exp)
+    , thScannerBuilderCtxTlexScannerBuilderCtx :: Tlex.ScannerBuilderContext s e (TH.Q TH.Exp)
     }
 
-type THScannerBuilder s a = State (THScannerBuilderContext s a)
+type THScannerBuilder s e a = State (THScannerBuilderContext s e a)
 
-buildTHScanner :: TH.Type -> TH.Type -> THScannerBuilder s a () -> THScanner
+buildTHScanner :: Enum e => TH.Type -> TH.Type -> THScannerBuilder s e a () -> THScanner e
 buildTHScanner startStateTy actionTy builder =
     let outputCtx = TlexTH.OutputContext
             { outputCtxStartStateTy = startStateTy
@@ -59,7 +59,7 @@ buildTHScanner startStateTy actionTy builder =
         , thScannerTlexScanner = tlexScanner
         }
 
-buildTHScannerWithReify :: forall s a. Typeable s => Typeable a => THScannerBuilder s a () -> TH.Q THScanner
+buildTHScannerWithReify :: forall s a e. Enum e => Typeable s => Typeable a => THScannerBuilder s e a () -> TH.Q (THScanner e)
 buildTHScannerWithReify builder = do
     startStateTy <- TypeableTH.liftTypeFromTypeable do Proxy @s
     actionTy <- TypeableTH.liftTypeFromTypeable do Proxy @a
@@ -80,7 +80,7 @@ buildTHScannerWithReify builder = do
             , thScannerTlexScanner = tlexScanner
             }
 
-liftTlexScannerBuilder :: Tlex.ScannerBuilder s (TH.Q TH.Exp) a -> THScannerBuilder s f a
+liftTlexScannerBuilder :: Enum e => Tlex.ScannerBuilder s e (TH.Q TH.Exp) a -> THScannerBuilder s e f a
 liftTlexScannerBuilder builder = do
     ctx0 <- get
     let (x, tlexCtx1) = runState
@@ -91,11 +91,11 @@ liftTlexScannerBuilder builder = do
             }
     pure x
 
-thLexRule :: Enum s => [s] -> Tlex.Pattern -> TH.Q (TH.TExp a) -> THScannerBuilder s a ()
+thLexRule :: Enum e => Enum s => [s] -> Tlex.Pattern e -> TH.Q (TH.TExp a) -> THScannerBuilder s e a ()
 thLexRule ss p act = liftTlexScannerBuilder do Tlex.lexRule ss p do TH.unType <$> act
 
 
-outputScanner :: THScanner -> TH.Q [TH.Dec]
+outputScanner :: Enum e => THScanner e -> TH.Q [TH.Dec]
 outputScanner scanner =
     let outputCtx = thScannerOutputCtx scanner
         nfa = Debug.trace "building NFA..." do

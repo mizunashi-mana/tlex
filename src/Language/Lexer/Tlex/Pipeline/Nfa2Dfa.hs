@@ -6,7 +6,7 @@ import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.HashMap.Strict               as HashMap
 import qualified Data.IntMap.Strict                as IntMap
-import qualified Language.Lexer.Tlex.Data.CharSet  as CharSet
+import qualified Data.IntSet                as IntSet
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
 import qualified Language.Lexer.Tlex.Machine.NFA   as NFA
@@ -125,32 +125,35 @@ nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
                     }
                 )
 
-        insertTrans (trans0, otherTrans0) (r, nfaSn) = case CharSet.toElements r of
-            CharSet.StraightChars cs ->
-                let ~newTrans = insertNfaSn nfaSn otherTrans0
-                    trans1 = foldl'
-                        do \trans c -> EnumMap.insertOrUpdate c
-                            do newTrans
-                            do \ss -> insertNfaSn nfaSn ss
-                            do trans
-                        do trans0
-                        do cs
-                in (trans1, otherTrans0)
-            CharSet.ComplementChars cs ->
-                let (diffTrans1, trans1) = foldl'
-                                            do \(diffTrans, trans) c ->
-                                                ( EnumMap.delete c diffTrans
-                                                , EnumMap.insertOrUpdate c
-                                                    MState.emptySet
-                                                    id
-                                                    trans
-                                                )
-                                            do (trans0, trans0)
-                                            do cs
-                    trans2 = EnumMap.foldlWithKey'
-                                do \trans c ss -> EnumMap.insert c
-                                    do insertNfaSn nfaSn ss
-                                    do trans
-                                do trans1
-                                do diffTrans1
-                in (trans2, insertNfaSn nfaSn otherTrans0)
+        insertTrans (trans0, otherTrans0) st =
+            let cs = NFA.nstTransRange st
+                nfaSn = NFA.nstTransNextState st
+            in case NFA.nstTransIsStraight st of
+                True ->
+                    let ~newTrans = insertNfaSn nfaSn otherTrans0
+                        trans1 = IntSet.foldl'
+                            do \trans c -> EnumMap.insertOrUpdate c
+                                do newTrans
+                                do \ss -> insertNfaSn nfaSn ss
+                                do trans
+                            do trans0
+                            do cs
+                    in (trans1, otherTrans0)
+                False ->
+                    let (diffTrans1, trans1) = IntSet.foldl'
+                                                do \(diffTrans, trans) c ->
+                                                    ( EnumMap.delete c diffTrans
+                                                    , EnumMap.insertOrUpdate c
+                                                        MState.emptySet
+                                                        id
+                                                        trans
+                                                    )
+                                                do (trans0, trans0)
+                                                do cs
+                        trans2 = EnumMap.foldlWithKey'
+                                    do \trans c ss -> EnumMap.insert c
+                                        do insertNfaSn nfaSn ss
+                                        do trans
+                                    do trans1
+                                    do diffTrans1
+                    in (trans2, insertNfaSn nfaSn otherTrans0)

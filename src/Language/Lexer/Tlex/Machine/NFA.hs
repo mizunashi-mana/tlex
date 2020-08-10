@@ -2,6 +2,7 @@ module Language.Lexer.Tlex.Machine.NFA
     (
         NFA (..),
         NFAState(..),
+        NFAStateTrans(..),
         NFABuilder,
         NFABuilderContext,
         buildNFA,
@@ -15,10 +16,10 @@ module Language.Lexer.Tlex.Machine.NFA
 
 import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Lexer.Tlex.Data.CharSet  as CharSet
 import qualified Language.Lexer.Tlex.Data.Graph    as Graph
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
+import qualified Data.IntSet as IntSet
 
 
 data NFA a = NFA
@@ -35,9 +36,16 @@ data NFA a = NFA
 data NFAState a = NState
     { nstAccepts      :: [Tlex.Accept a]
     , nstEpsilonTrans :: [MState.StateNum]
-    , nstTrans        :: [(CharSet.CharSet, MState.StateNum)]
+    , nstTrans        :: [NFAStateTrans]
     }
     deriving (Eq, Show, Functor)
+
+data NFAStateTrans = NFAStateTrans
+    { nstTransIsStraight :: Bool
+    , nstTransRange      :: IntSet.IntSet
+    , nstTransNextState  :: MState.StateNum
+    }
+    deriving (Eq, Show)
 
 epsilonClosed :: NFA a -> NFA a
 epsilonClosed nfa@NFA{ nfaTrans } = nfa
@@ -105,8 +113,8 @@ epsilonTrans sf st
                 }
             do n
 
-condTrans :: MState.StateNum -> CharSet.CharSet -> MState.StateNum -> NFABuilder m ()
-condTrans sf r st = modify' \ctx0@NFABuilderContext{ nfaBCtxStateMap } -> ctx0
+condTrans :: MState.StateNum -> NFAStateTrans -> NFABuilder m ()
+condTrans sf st = modify' \ctx0@NFABuilderContext{ nfaBCtxStateMap } -> ctx0
     { nfaBCtxStateMap = addCondTrans nfaBCtxStateMap
     }
     where
@@ -114,10 +122,10 @@ condTrans sf r st = modify' \ctx0@NFABuilderContext{ nfaBCtxStateMap } -> ctx0
             do NState
                 { nstAccepts = []
                 , nstEpsilonTrans = []
-                , nstTrans = [(r, st)]
+                , nstTrans = [st]
                 }
             do \s@NState{ nstTrans } -> s
-                { nstTrans = (r, st):nstTrans
+                { nstTrans = st:nstTrans
                 }
             do n
 

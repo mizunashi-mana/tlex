@@ -109,6 +109,7 @@ library
         Language.Lexer.Tlex
         Language.Lexer.Tlex.Syntax
         Language.Lexer.Tlex.Plugin.TH
+        Language.Lexer.Tlex.Plugin.Unicode
 
         -- internals
         Language.Lexer.Tlex.Prelude
@@ -121,7 +122,7 @@ library
         Language.Lexer.Tlex.Output.TH
         Language.Lexer.Tlex.Data.EnumSet
         Language.Lexer.Tlex.Data.EnumMap
-        Language.Lexer.Tlex.Data.CharSet
+        Language.Lexer.Tlex.Data.SymEnumSet
         Language.Lexer.Tlex.Data.Graph
         Language.Lexer.Tlex.Data.TypeableTH
 
