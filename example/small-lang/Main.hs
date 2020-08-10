@@ -3,7 +3,7 @@
 module Main where
 
 import qualified Language.Lexer.Tlex.Plugin.TH as TlexTH
-import qualified Lexer as Lexer
+import qualified Lexer                         as Lexer
 
 $(Lexer.buildLexer)
 

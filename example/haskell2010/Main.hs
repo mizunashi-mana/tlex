@@ -3,11 +3,11 @@
 module Main where
 
 import qualified Language.Lexer.Tlex.Plugin.TH as TlexTH
-import qualified Lexer as Lexer
+import qualified Lexer                         as Lexer
 
 main :: IO ()
 main = putStrLn "Hello, World"
-{-
+
 $(Lexer.buildLexer)
 
 lexString :: String -> Either String [String]
@@ -19,4 +19,3 @@ lexString input = go input id where
             let rest = TlexTH.inputStringCtxRest ctx
                 consumed = TlexTH.inputStringCtxPos ctx
             in go rest (\n -> acc (take consumed s:n))
--}

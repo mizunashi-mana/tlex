@@ -20,10 +20,12 @@ import qualified Language.Haskell.TH                      as TH
 import qualified Language.Lexer.Tlex.Data.TypeableTH      as TypeableTH
 import qualified Language.Lexer.Tlex.Machine.NFA          as NFA
 import qualified Language.Lexer.Tlex.Output.TH            as TlexTH
+import qualified Language.Lexer.Tlex.Pipeline.MinDfa      as TlexPipeline
 import qualified Language.Lexer.Tlex.Pipeline.Nfa2Dfa     as TlexPipeline
 import qualified Language.Lexer.Tlex.Pipeline.Pattern2Nfa as TlexPipeline
-import qualified Language.Lexer.Tlex.Pipeline.MinDfa as TlexPipeline
 import qualified Language.Lexer.Tlex.Syntax               as Tlex
+
+import qualified Debug.Trace as Debug
 
 
 data THScanner = THScanner
@@ -96,16 +98,20 @@ thLexRule ss p act = liftTlexScannerBuilder do Tlex.lexRule ss p do TH.unType <$
 outputScanner :: THScanner -> TH.Q [TH.Dec]
 outputScanner scanner =
     let outputCtx = thScannerOutputCtx scanner
-        nfa = NFA.buildNFA do
-            TlexPipeline.scanner2Nfa do thScannerTlexScanner scanner
-        dfa = TlexPipeline.nfa2Dfa nfa
-        minDfa = TlexPipeline.minDfa dfa
-    in TlexTH.outputDfa outputCtx minDfa
+        nfa = Debug.trace "building NFA..." do
+            NFA.buildNFA do
+                TlexPipeline.scanner2Nfa do thScannerTlexScanner scanner
+        dfa = Debug.trace "building DFA..." do
+            TlexPipeline.nfa2Dfa nfa
+        minDfa = Debug.trace "minizing DFA..." do
+            TlexPipeline.minDfa dfa
+    in Debug.trace "outputing DFA..." do
+        TlexTH.outputDfa outputCtx minDfa
 
 
 data InputStringContext = InputStringContext
     { inputStringCtxRest :: [Char]
-    , inputStringCtxPos :: Int
+    , inputStringCtxPos  :: Int
     }
     deriving (Eq, Show)
 

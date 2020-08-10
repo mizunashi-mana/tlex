@@ -2,14 +2,14 @@ module Language.Lexer.Tlex.Pipeline.MinDfa (
     minDfa,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.HashMap.Strict as HashMap
-import qualified Data.HashSet as HashSet
+import qualified Data.HashMap.Strict               as HashMap
+import qualified Data.HashSet                      as HashSet
+import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
-import qualified Language.Lexer.Tlex.Data.EnumMap as EnumMap
-import qualified Language.Lexer.Tlex.Syntax as Tlex
+import qualified Language.Lexer.Tlex.Syntax        as Tlex
 
 
 minDfa :: DFA.DFA a -> DFA.DFA a
@@ -27,6 +27,7 @@ data MinDfaContext m = MinDfaContext
     { minDfaCtxStateMap      :: MState.StateMap MState.StateNum
     , minDfaCtxDFABuilderCtx :: DFA.DFABuilderContext m
     }
+    deriving (Eq, Show, Functor)
 
 type MinDfaM m = State (MinDfaContext m)
 
@@ -89,15 +90,15 @@ minDfaM dfa@DFA.DFA{ dfaTrans } = do
                     forM_
                         do EnumMap.assocs do DFA.dstTrans dst
                         do \(c, sn) -> do
-                            ctx <- get
-                            let trans = dstBuilderCtxTrans ctx
-                            case EnumMap.lookup c trans of
+                            ctx0 <- get
+                            case EnumMap.lookup c do dstBuilderCtxTrans ctx0 of
                                 Just{}  -> pure ()
                                 Nothing -> do
                                     newSn <- liftMinDfaOp do getOrRegisterStateByOldState sn
-                                    put do ctx
-                                            { dstBuilderCtxTrans = EnumMap.insert c newSn trans
-                                            }
+                                    modify' \ctx -> ctx
+                                        { dstBuilderCtxTrans = EnumMap.insert c newSn
+                                            do dstBuilderCtxTrans ctx
+                                        }
 
                     case DFA.dstOtherTrans dst of
                         Nothing -> pure ()
@@ -117,6 +118,7 @@ data DFAStateBuilderContext a = DStateBuilderContext
     , dstBuilderCtxOtherTrans :: Maybe MState.StateNum
     , dstBuilderCtxMinDfaCtx  :: MinDfaContext a
     }
+    deriving (Eq, Show, Functor)
 
 type DFAStateBuilder a = State (DFAStateBuilderContext a)
 
@@ -156,9 +158,10 @@ insertAcceptToDst acc = modify' \builder -> builder
 
 
 data Partition = Partition
-    { partitionMap :: MState.StateMap MState.StateNum
+    { partitionMap    :: MState.StateMap MState.StateNum
     , partitionMember :: MState.StateMap MState.StateSet
     }
+    deriving (Eq, Show)
 
 emptyPartition :: Partition
 emptyPartition = Partition
@@ -194,14 +197,21 @@ buildPartition dfa =
         go p0 q0 = case HashSet.toList q0 of
             []  -> p0
             a:_ ->
-                let (p1, q1) = go2 a p0 q0
+                let (p1, q1) = go2 a p0 do
+                        HashSet.delete a q0
                 in go p1 q1
 
         go2 a p0 q0 = foldl'
             do \(p, q) x -> go3 p q x
             do (p0, q0)
             let rt = findIncomingTrans a
-            in dfaRevTransOther rt:[ x | (_, x) <- EnumMap.assocs do dfaRevTrans rt ]
+            in HashSet.toList do
+                HashSet.fromList
+                    [ x
+                    | x <- dfaRevTransOther rt:
+                        [ x | (_, x) <- EnumMap.assocs do dfaRevTrans rt ]
+                    , not do MState.nullSet x
+                    ]
 
         go3 p0 q0 x = foldl'
             do \(p, q) (sp, xy) ->
@@ -296,7 +306,7 @@ acceptGroup DFA.DFA{ dfaTrans } = foldl'
                 do m
 
 data DFARevTrans a = DFARevTrans
-    { dfaRevTrans :: EnumMap.EnumMap Char MState.StateSet
+    { dfaRevTrans      :: EnumMap.EnumMap Char MState.StateSet
     , dfaRevTransOther :: MState.StateSet
     }
 

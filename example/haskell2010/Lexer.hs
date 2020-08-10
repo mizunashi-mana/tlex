@@ -26,7 +26,7 @@ nestedCommentRule = TlexTH.thLexRule [NestedComment]
 buildLexer :: TH.Q [TH.Dec]
 buildLexer = do
     lexer <- TlexTH.buildTHScannerWithReify lexerRules
-    TlexTH.outputScanner lexer 
+    TlexTH.outputScanner lexer
 
 lexerRules :: TlexTH.THScannerBuilder LexerState LexerAction ()
 lexerRules = do
