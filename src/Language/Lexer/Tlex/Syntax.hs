@@ -6,6 +6,7 @@ module Language.Lexer.Tlex.Syntax (
     buildScanner,
     lexRule,
     Pattern (..),
+    enumsP,
     anyoneP,
     maybeP,
     someP,
@@ -23,6 +24,7 @@ import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.Hashable                       as Hashable
 import qualified Language.Lexer.Tlex.Data.SymEnumSet as SymEnumSet
+import qualified Language.Lexer.Tlex.Data.EnumSet    as EnumSet
 
 
 newtype Scanner e a = Scanner
@@ -100,6 +102,9 @@ instance Enum e => Semigroup (Pattern e) where
 
 instance Enum e => Monoid (Pattern e) where
     mempty = Empty
+
+enumsP :: Enum e => [e] -> Pattern e
+enumsP l = Range do SymEnumSet.fromEnumSet True do EnumSet.fromList l
 
 anyoneP :: Enum e => Pattern e
 anyoneP = Range SymEnumSet.full
