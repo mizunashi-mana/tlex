@@ -109,7 +109,7 @@ library
         Language.Lexer.Tlex
         Language.Lexer.Tlex.Syntax
         Language.Lexer.Tlex.Plugin.TH
-        Language.Lexer.Tlex.Plugin.Unicode
+        Language.Lexer.Tlex.Plugin.Encoding
 
         -- internals
         Language.Lexer.Tlex.Prelude
