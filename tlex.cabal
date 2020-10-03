@@ -120,8 +120,10 @@ library
         Language.Lexer.Tlex.Pipeline.Nfa2Dfa
         Language.Lexer.Tlex.Pipeline.MinDfa
         Language.Lexer.Tlex.Output.TH
+        Language.Lexer.Tlex.Data.Bag
         Language.Lexer.Tlex.Data.EnumSet
         Language.Lexer.Tlex.Data.EnumMap
+        Language.Lexer.Tlex.Data.Reporter
         Language.Lexer.Tlex.Data.SymEnumSet
         Language.Lexer.Tlex.Data.Graph
         Language.Lexer.Tlex.Data.TypeableTH

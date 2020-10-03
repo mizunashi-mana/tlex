@@ -1,4 +1,18 @@
-module Language.Lexer.Tlex.Plugin.Encoding where
+module Language.Lexer.Tlex.Plugin.Encoding (
+    Pattern,
+    CharSetStdP,
+    CharSetP (..),
+    charSetP,
+    charSetPWithWarnings,
+    chP,
+    charsP,
+    stringP,
+
+    charSetPUtf8,
+
+    EncodeWarning (..),
+    CharSetEncoder (..),
+) where
 
 import           Language.Lexer.Tlex.Prelude
 
@@ -6,22 +20,38 @@ import qualified Data.CharSet                as CharSet
 import qualified Data.IntSet                 as IntSet
 import qualified Data.String                 as String
 import qualified Data.Word                   as Word
-import qualified Data.Char                   as Char
 import qualified Language.Lexer.Tlex.Syntax  as Tlex
 import qualified Data.Bits                   as Bits
+import qualified Language.Lexer.Tlex.Data.Reporter as Reporter
 
 
 type Pattern = Tlex.Pattern Word.Word8
 
-newtype CharSetP = CharSetP
-    { charSetEncodingP :: CharSet.CharSet -> (Pattern, CharSet.CharSet)
+type CharSetStdP = CharSetP Identity
+
+newtype CharSetP m = CharSetP
+    { charSetEncodingP :: CharSet.CharSet -> m Pattern
     }
 
-charSetP :: CharSetP -> CharSet.CharSet -> Pattern
-charSetP p cs = let (r, _) = charSetEncodingP p cs in r
+charSetP :: CharSetStdP -> CharSet.CharSet -> Pattern
+charSetP p cs = runIdentity do charSetEncodingP p cs
+
+charSetPWithWarnings :: CharSetEncoder m => CharSetP m -> CharSet.CharSet -> m Pattern
+charSetPWithWarnings p cs = charSetEncodingP p cs
+
+chP :: CharSetStdP -> Char -> Pattern
+chP p c = charSetP p do CharSet.singleton c
+
+charsP :: CharSetStdP -> [Char] -> Pattern
+charsP p cs = charSetP p do CharSet.fromList cs
+
+stringP :: CharSetStdP -> String.String -> Pattern
+stringP p s = foldMap
+    do chP p
+    do s
 
 
-charSetPUtf8 :: CharSetP
+charSetPUtf8 :: CharSetEncoder m => CharSetP m
 charSetPUtf8 = CharSetP
     { charSetEncodingP = \case
         CharSet.CharSet True  _ is -> goStraight do IntSet.toAscList is
@@ -36,30 +66,23 @@ charSetPUtf8 = CharSetP
             | c <= 0xFFFF -> 0xE0 + Bits.shiftR c 12
             | otherwise   -> 0xF0 + Bits.shiftR c 18
 
-        goStraight l = goStraight' CharSet.empty l
-
-        goStraight' ex = \case
-            [] -> (Tlex.Empty, ex)
+        goStraight = \case
+            [] -> pure Tlex.Empty
             c:cs -> case byteOffset c of
-                -1 -> goStraight'
-                    do CharSet.insert
-                        do Char.chr c
-                        do ex
-                    do cs
-                i -> buildStraightP i [c] ex [] cs
+                -1 -> do
+                    reportNotSupportedWarning c
+                    goStraight cs
+                i  -> buildStraightP i [c] [] cs
 
-        buildStraightP i l ex ps = \case
-            [] -> (Tlex.orP do straightP l i:ps, ex)
+        buildStraightP i l ps = \case
+            [] -> pure do Tlex.orP do straightP l i:ps
             c:cs -> case byteOffset c of
-                -1 -> buildStraightP i l
-                    do CharSet.insert
-                        do Char.chr c
-                        do ex
-                    do ps
-                    do cs
+                -1 -> do
+                    reportNotSupportedWarning c
+                    buildStraightP i l ps cs
                 ni
-                    | ni == i -> buildStraightP i (c:l) ex ps cs
-                    | otherwise -> buildStraightP ni [c] ex
+                    | ni == i   -> buildStraightP i (c:l) ps cs
+                    | otherwise -> buildStraightP ni [c]
                         do straightP l i:ps
                         do cs
 
@@ -74,14 +97,23 @@ charSetPUtf8 = CharSetP
 
         goComplement = undefined
 
+        reportNotSupportedWarning c = reportEncodeWarning
+            do NotSupportedChar do toEnum c
 
-chP :: CharSetP -> Char -> Pattern
-chP p c = charSetP p do CharSet.singleton c
 
-charsP :: CharSetP -> [Char] -> Pattern
-charsP p cs = charSetP p do CharSet.fromList cs
+data EncodeWarning
+    = NotSupportedChar Char
+    | CustomWarning String.String
+    deriving (Eq, Show)
 
-stringP :: CharSetP -> String.String -> Pattern
-stringP p s = foldMap
-    do chP p
-    do s
+class Monad m => CharSetEncoder m where
+    reportEncodeWarning :: EncodeWarning -> m ()
+
+instance CharSetEncoder Identity where
+    reportEncodeWarning _ = pure ()
+
+instance CharSetEncoder (Either EncodeWarning) where
+    reportEncodeWarning e = Left e
+
+instance CharSetEncoder (Reporter.Reporter EncodeWarning) where
+    reportEncodeWarning e = Reporter.report e

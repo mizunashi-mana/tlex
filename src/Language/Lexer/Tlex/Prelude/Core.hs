@@ -9,6 +9,7 @@ module Language.Lexer.Tlex.Prelude.Core
         module Data.Foldable,
         module Data.Function,
         module Data.Functor,
+        module Data.Functor.Identity,
         module Data.Functor.Compose,
         module Data.Ix,
         module Data.Kind,
@@ -25,6 +26,7 @@ import           Data.Coerce
 import           Data.Foldable                    hiding (foldl, foldr')
 import           Data.Function                    hiding (($))
 import           Data.Functor
+import           Data.Functor.Identity
 import           Data.Functor.Compose
 import           Data.Ix                          (Ix)
 import           Data.Kind                        (Type)
