@@ -10,7 +10,7 @@ $(Lexer.buildLexer)
 
 main :: IO ()
 main = do
-    s <- readFile "example.hs"
+    s <- readFile "input/example-uni.hs"
     case lexString s of
         Right xs -> print xs
         Left msg -> do

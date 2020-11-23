@@ -204,7 +204,3 @@ instance  (Read a, Read b) => Read (a,b)  where
                                                  (")",w) <- lex v ] )
 
 -- Other tuples have similar Read and Show instances
-
--- Unicode comment あいうえお
-変数 :: String
-変数 = "定数"
