@@ -7,6 +7,7 @@ module Language.Lexer.Tlex.Syntax (
     lexRule,
     Pattern (..),
     enumsP,
+    straightEnumSetP,
     anyoneP,
     maybeP,
     someP,
@@ -104,7 +105,10 @@ instance Enum e => Monoid (Pattern e) where
     mempty = Empty
 
 enumsP :: Enum e => [e] -> Pattern e
-enumsP l = Range do SymEnumSet.fromEnumSet True do EnumSet.fromList l
+enumsP l = straightEnumSetP do EnumSet.fromList l
+
+straightEnumSetP :: Enum e => EnumSet.EnumSet e -> Pattern e
+straightEnumSetP s = Range do SymEnumSet.fromEnumSet True s
 
 anyoneP :: Enum e => Pattern e
 anyoneP = Range SymEnumSet.full

@@ -59,7 +59,8 @@ buildTHScanner startStateTy actionTy builder =
         , thScannerTlexScanner = tlexScanner
         }
 
-buildTHScannerWithReify :: forall s a e. Enum e => Typeable s => Typeable a => THScannerBuilder s e a () -> TH.Q (THScanner e)
+buildTHScannerWithReify :: forall s a e. Enum e => Typeable s => Typeable a
+    => THScannerBuilder s e a () -> TH.Q (THScanner e)
 buildTHScannerWithReify builder = do
     startStateTy <- TypeableTH.liftTypeFromTypeable do Proxy @s
     actionTy <- TypeableTH.liftTypeFromTypeable do Proxy @a

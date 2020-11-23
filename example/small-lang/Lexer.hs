@@ -7,12 +7,17 @@ import qualified Data.CharSet.Unicode          as UniCharSet
 import qualified Language.Haskell.TH           as TH
 import qualified Language.Lexer.Tlex           as Tlex
 import qualified Language.Lexer.Tlex.Plugin.TH as TlexTH
+import qualified Language.Lexer.Tlex.Plugin.Encoding as TlexEnc
+import qualified Data.Word as Word
 
 type LexerState = ()
 type LexerAction = ()
+type CodeUnit = Word.Word8
 
-initialRule :: Tlex.Pattern -> TH.Q (TH.TExp LexerAction)
-    -> TlexTH.THScannerBuilder LexerState LexerAction ()
+type ScannerBuilder = TlexTH.THScannerBuilder LexerState CodeUnit LexerAction
+type Pattern = Tlex.Pattern CodeUnit
+
+initialRule :: Pattern -> TH.Q (TH.TExp LexerAction) -> ScannerBuilder ()
 initialRule = TlexTH.thLexRule [()]
 
 buildLexer :: TH.Q [TH.Dec]
@@ -20,7 +25,7 @@ buildLexer = do
     lexer <- TlexTH.buildTHScannerWithReify lexerRules
     TlexTH.outputScanner lexer
 
-lexerRules :: TlexTH.THScannerBuilder LexerState () ()
+lexerRules :: ScannerBuilder ()
 lexerRules = do
     initialRule (Tlex.someP whitecharP) [||()||]
     initialRule specialP [||()||]
@@ -56,14 +61,14 @@ largeP = charSetP $ CharSet.range 'A' 'Z'
 digitP = charSetP $ CharSet.range '0' '9'
 
 
-charSetP :: CharSet.CharSet -> Tlex.Pattern
-charSetP cs = Tlex.Range cs
+charSetP :: CharSet.CharSet -> Pattern
+charSetP cs = TlexEnc.charSetP TlexEnc.charSetPUtf8 cs
 
-chP :: Char -> Tlex.Pattern
-chP c = Tlex.Range $ CharSet.singleton c
+chP :: Char -> Pattern
+chP c = TlexEnc.chP TlexEnc.charSetPUtf8 c
 
-charsP :: [Char] -> Tlex.Pattern
-charsP cs = charSetP $ CharSet.fromList cs
+charsP :: [Char] -> Pattern
+charsP cs = TlexEnc.charsP TlexEnc.charSetPUtf8 cs
 
-stringP :: String -> Tlex.Pattern
-stringP s = foldMap chP s
+stringP :: String -> Pattern
+stringP s = TlexEnc.stringP TlexEnc.charSetPUtf8 s

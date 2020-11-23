@@ -2,6 +2,7 @@ module Language.Lexer.Tlex.Data.EnumSet (
     EnumSet,
     empty,
     singleton,
+    insert,
     union,
     intersection,
     difference,
@@ -27,6 +28,12 @@ empty = EnumSet IntSet.empty
 
 singleton :: Enum a => a -> EnumSet a
 singleton x = EnumSet do IntSet.singleton do fromEnum x
+
+insert :: Enum a => a -> EnumSet a -> EnumSet a
+insert x (EnumSet s) = EnumSet
+    do IntSet.insert
+        do fromEnum x
+        do s
 
 union :: Enum a => EnumSet a -> EnumSet a -> EnumSet a
 union (EnumSet s1) (EnumSet s2) = EnumSet do IntSet.union s1 s2

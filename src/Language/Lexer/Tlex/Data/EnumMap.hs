@@ -3,6 +3,7 @@ module Language.Lexer.Tlex.Data.EnumMap (
     empty,
     insert,
     assocs,
+    keys,
     toDescList,
     lookup,
     insertOrUpdate,
@@ -12,6 +13,7 @@ module Language.Lexer.Tlex.Data.EnumMap (
     delete,
     singleton,
     unionWith,
+    intersectionWith,
     mapWithKey,
     mergeWithKey,
 ) where
@@ -38,6 +40,9 @@ insert k x (EnumMap m) = EnumMap do IntMap.insert (fromEnum k) x m
 
 assocs :: Enum k => EnumMap k a -> [(k, a)]
 assocs (EnumMap m) = [ (toEnum i, x) | (i, x) <- IntMap.assocs m ]
+
+keys :: Enum k => EnumMap k a -> [k]
+keys (EnumMap m) = [ toEnum k | k <- IntMap.keys m ]
 
 toDescList :: Enum k => EnumMap k a -> [(k, a)]
 toDescList (EnumMap m) = [ (toEnum i, x) | (i, x) <- IntMap.toDescList m ]
@@ -66,6 +71,9 @@ update f k (EnumMap m) = EnumMap do IntMap.update f (fromEnum k) m
 
 unionWith :: Enum k => (a -> a -> a) -> EnumMap k a -> EnumMap k a -> EnumMap k a
 unionWith f (EnumMap m1) (EnumMap m2) = EnumMap do IntMap.unionWith f m1 m2
+
+intersectionWith :: Enum k => (a -> a -> a) -> EnumMap k a -> EnumMap k a -> EnumMap k a
+intersectionWith f (EnumMap m1) (EnumMap m2) = EnumMap do IntMap.intersectionWith f m1 m2
 
 mapWithKey :: Enum k => (k -> a -> b) -> EnumMap k a -> EnumMap k b
 mapWithKey f (EnumMap m) = EnumMap do
