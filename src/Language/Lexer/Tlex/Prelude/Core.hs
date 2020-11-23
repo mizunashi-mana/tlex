@@ -26,8 +26,8 @@ import           Data.Coerce
 import           Data.Foldable                    hiding (foldl, foldr')
 import           Data.Function                    hiding (($))
 import           Data.Functor
-import           Data.Functor.Identity
 import           Data.Functor.Compose
+import           Data.Functor.Identity
 import           Data.Ix                          (Ix)
 import           Data.Kind                        (Type)
 import           Data.List.NonEmpty               (NonEmpty (..))

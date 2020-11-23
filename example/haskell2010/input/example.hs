@@ -9,11 +9,11 @@
 --      Bool, Maybe, Either, Ordering
 -- are done via "deriving" clauses in Prelude.hs
 
-import Data.Char(isSpace, isAlpha, isDigit, isAlphaNum,
-                 showLitChar, readLitChar, lexLitChar)
+import           Data.Char (isAlpha, isAlphaNum, isDigit, isSpace, lexLitChar,
+                            readLitChar, showLitChar)
 
-import Numeric(showSigned, showInt, readSigned, readDec, showFloat,
-               readFloat, lexDigits)
+import           Numeric   (lexDigits, readDec, readFloat, readSigned,
+                            showFloat, showInt, showSigned)
 
 type  ReadS a  = String -> [(a,String)]
 type  ShowS    = String -> String

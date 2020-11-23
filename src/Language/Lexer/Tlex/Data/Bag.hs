@@ -33,7 +33,7 @@ instance Eq a => Eq (Bag a) where
 instance Semigroup (Bag a) where
     EmptyBag <> b2 = b2
     b1 <> EmptyBag = b1
-    b1 <> b2 = IncludeBags b1 b2
+    b1 <> b2       = IncludeBags b1 b2
 
 instance Monoid (Bag a) where
     mempty = EmptyBag

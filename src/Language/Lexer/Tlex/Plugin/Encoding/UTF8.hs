@@ -4,14 +4,14 @@ module Language.Lexer.Tlex.Plugin.Encoding.UTF8 (
 
 import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Lexer.Tlex.Plugin.Encoding.CharSetP as CharSetP
-import qualified Data.CharSet                as CharSet
-import qualified Data.IntSet                 as IntSet
-import qualified Language.Lexer.Tlex.Data.EnumSet    as EnumSet
-import qualified Language.Lexer.Tlex.Data.EnumMap    as EnumMap
+import qualified Data.CharSet                                   as CharSet
+import qualified Data.IntSet                                    as IntSet
+import qualified Data.Word                                      as Word
+import qualified Language.Lexer.Tlex.Data.EnumMap               as EnumMap
+import qualified Language.Lexer.Tlex.Data.EnumSet               as EnumSet
 import qualified Language.Lexer.Tlex.Data.NonEmptyEnumStringSet as NonEmptyEnumStringSet
-import qualified Data.Word                   as Word
-import qualified Language.Lexer.Tlex.Syntax               as Tlex
+import qualified Language.Lexer.Tlex.Plugin.Encoding.CharSetP   as CharSetP
+import qualified Language.Lexer.Tlex.Syntax                     as Tlex
 
 
 charSetToByteStringSetUtf8 :: CharSetP.CharSetEncoder m

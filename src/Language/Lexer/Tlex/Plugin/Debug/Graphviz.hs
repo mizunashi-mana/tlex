@@ -6,7 +6,7 @@ module Language.Lexer.Tlex.Plugin.Debug.Graphviz (
     outputAst,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
 import qualified Prelude
 
@@ -19,15 +19,15 @@ data NodeShape
 type NodeId = Prelude.String
 
 data Node = Node
-    { nodeId :: NodeId
+    { nodeId    :: NodeId
     , nodeLabel :: Maybe Prelude.String
     , nodeShape :: Maybe NodeShape
     }
     deriving (Eq, Show)
 
 data Edge = Edge
-    { edgeFrom :: NodeId
-    , edgeTo :: NodeId
+    { edgeFrom  :: NodeId
+    , edgeTo    :: NodeId
     , edgeLabel :: Maybe Prelude.String
     }
     deriving (Eq, Show)
@@ -59,7 +59,7 @@ outputAst ast =
                         "shape = " ++
                         do case sh of
                             DoubleCircle -> "doublecircle"
-                            Circle -> "circle"
+                            Circle       -> "circle"
                         ++
                         ","
                 ++

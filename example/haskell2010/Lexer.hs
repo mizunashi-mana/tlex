@@ -4,13 +4,13 @@
 
 module Lexer where
 
-import qualified Data.CharSet                  as CharSet
-import qualified Data.CharSet.Unicode          as UniCharSet
-import qualified Language.Haskell.TH           as TH
-import qualified Language.Lexer.Tlex           as Tlex
-import qualified Language.Lexer.Tlex.Plugin.TH as TlexTH
+import qualified Data.CharSet                        as CharSet
+import qualified Data.CharSet.Unicode                as UniCharSet
+import qualified Data.Word                           as Word
+import qualified Language.Haskell.TH                 as TH
+import qualified Language.Lexer.Tlex                 as Tlex
 import qualified Language.Lexer.Tlex.Plugin.Encoding as TlexEnc
-import qualified Data.Word as Word
+import qualified Language.Lexer.Tlex.Plugin.TH       as TlexTH
 
 data LexerState
     = Initial

@@ -2,13 +2,13 @@ module Language.Lexer.Tlex.Plugin.Debug (
     outputDfaToDot,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
+import qualified Data.IntMap                               as IntMap
+import qualified Language.Lexer.Tlex.Data.EnumMap          as EnumMap
+import qualified Language.Lexer.Tlex.Machine.DFA           as DFA
+import qualified Language.Lexer.Tlex.Machine.State         as MState
 import qualified Language.Lexer.Tlex.Plugin.Debug.Graphviz as Graphviz
-import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
-import qualified Language.Lexer.Tlex.Machine.State as MState
-import qualified Data.IntMap as IntMap
-import qualified Language.Lexer.Tlex.Data.EnumMap as EnumMap
 
 
 outputDfaToDot :: DFA.DFA a -> Graphviz.Ast

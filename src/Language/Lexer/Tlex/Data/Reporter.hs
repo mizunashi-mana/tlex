@@ -13,7 +13,7 @@ import qualified Language.Lexer.Tlex.Data.Bag as Bag
 
 data Reporter e a = Reporter
     { getReportBag :: Bag.Bag e
-    , getResult :: a
+    , getResult    :: a
     }
     deriving (Eq, Show, Functor)
 
