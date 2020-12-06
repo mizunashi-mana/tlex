@@ -33,7 +33,6 @@ data THScanner e = THScanner
     , thScannerTlexScanner :: Tlex.Scanner e (TH.Q TH.Exp)
     }
 
-
 data THScannerBuilderContext s e a = THScannerBuilderContext
     { thScannerBuilderCtxOutputCtx :: TlexTH.OutputContext
     , thScannerBuilderCtxTlexScannerBuilderCtx :: Tlex.ScannerBuilderContext s e (TH.Q TH.Exp)
@@ -41,10 +40,11 @@ data THScannerBuilderContext s e a = THScannerBuilderContext
 
 type THScannerBuilder s e a = State (THScannerBuilderContext s e a)
 
-buildTHScanner :: Enum e => TH.Type -> TH.Type -> THScannerBuilder s e a () -> THScanner e
-buildTHScanner startStateTy actionTy builder =
+buildTHScanner :: Enum e => TH.Type -> TH.Type -> TH.Type -> THScannerBuilder s e a () -> THScanner e
+buildTHScanner codeUnitTy startStateTy actionTy builder =
     let outputCtx = TlexTH.OutputContext
             { outputCtxStartStateTy = startStateTy
+            , outputCtxCodeUnitTy = codeUnitTy
             , outputCtxSemanticActionTy = actionTy
             }
         tlexScanner = Tlex.buildScanner do
@@ -59,13 +59,16 @@ buildTHScanner startStateTy actionTy builder =
         , thScannerTlexScanner = tlexScanner
         }
 
-buildTHScannerWithReify :: forall s a e. Enum e => Typeable s => Typeable a
-    => THScannerBuilder s e a () -> TH.Q (THScanner e)
+buildTHScannerWithReify :: forall s a e.
+    Enum e => Typeable e => Typeable s => Typeable a =>
+    THScannerBuilder s e a () -> TH.Q (THScanner e)
 buildTHScannerWithReify builder = do
     startStateTy <- TypeableTH.liftTypeFromTypeable do Proxy @s
+    codeUnitTy <- TypeableTH.liftTypeFromTypeable do Proxy @e
     actionTy <- TypeableTH.liftTypeFromTypeable do Proxy @a
     let outputCtx = TlexTH.OutputContext
             { outputCtxStartStateTy = startStateTy
+            , outputCtxCodeUnitTy = codeUnitTy
             , outputCtxSemanticActionTy = actionTy
             }
         tlexScanner = Tlex.buildScanner do
@@ -110,29 +113,32 @@ outputScanner scanner =
         TlexTH.outputDfa outputCtx minDfa
 
 
-data InputStringContext = InputStringContext
-    { inputStringCtxRest :: [Char]
+data InputStringContext e = InputStringContext
+    { inputStringCtxRest :: [e]
     , inputStringCtxPos  :: Int
     }
     deriving (Eq, Show)
 
-initialInputStringContext :: [Char] -> InputStringContext
+initialInputStringContext :: [e] -> InputStringContext e
 initialInputStringContext s = InputStringContext
     { inputStringCtxRest = s
     , inputStringCtxPos = 0
     }
 
-newtype InputString a = InputString
-    { unInputString :: State InputStringContext a
+newtype InputString e a = InputString
+    { unInputString :: State (InputStringContext e) a
     }
-    deriving Functor
-    deriving (Applicative, Monad) via State InputStringContext
+    deriving (
+        Functor,
+        Applicative,
+        Monad
+    ) via State (InputStringContext e)
 
-runInputString :: InputString a -> [Char] -> (a, InputStringContext)
+runInputString :: InputString e a -> [e] -> (a, InputStringContext e)
 runInputString (InputString runner) input =
     runState runner do initialInputStringContext input
 
-instance TlexTH.TlexContext InputStringContext InputString where
+instance Enum e => TlexTH.TlexContext (InputStringContext e) e (InputString e) where
     tlexGetInputPart = InputString do
         inputCtx <- get
         case inputStringCtxRest inputCtx of

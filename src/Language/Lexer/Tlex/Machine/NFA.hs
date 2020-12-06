@@ -28,11 +28,6 @@ data NFA a = NFA
     }
     deriving (Eq, Show, Functor)
 
--- |
---
--- TODO:
--- * support polymorphic trans condition; only support charset now.
---
 data NFAState a = NState
     { nstAccepts      :: [Tlex.Accept a]
     , nstEpsilonTrans :: [MState.StateNum]

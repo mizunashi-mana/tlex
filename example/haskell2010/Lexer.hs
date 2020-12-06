@@ -18,10 +18,10 @@ data LexerState
     deriving (Eq, Show, Enum)
 
 type LexerAction = ()
-type CodeUnit = Word.Word8
+type LexerCodeUnit = Word.Word8
 
-type ScannerBuilder = TlexTH.THScannerBuilder LexerState CodeUnit LexerAction
-type Pattern = Tlex.Pattern CodeUnit
+type ScannerBuilder = TlexTH.THScannerBuilder LexerState LexerCodeUnit LexerAction
+type Pattern = Tlex.Pattern LexerCodeUnit
 
 initialRule :: Pattern -> TH.Q (TH.TExp LexerAction) -> ScannerBuilder ()
 initialRule = TlexTH.thLexRule [Initial]
@@ -63,6 +63,7 @@ lexerRules = do
     initialRule litStringP [||()||]
 
 -- See https://www.haskell.org/onlinereport/haskell2010/haskellch2.html#x7-160002.2
+-- See also, https://gitlab.haskell.org/ghc/ghc/-/blob/ghc-8.10.2-release/compiler/parser/Lexer.x#L2136
 
 specialP = charSetP specialCs
 specialCs = CharSet.fromList
@@ -130,7 +131,10 @@ smallCs = mconcat
     , CharSet.singleton '_'
     ]
 ascSmallCs = CharSet.range 'a' 'z'
-uniSmallCs = UniCharSet.lowercaseLetter
+uniSmallCs = mconcat
+    [ UniCharSet.lowercaseLetter
+    , UniCharSet.otherLetter
+    ]
 
 largeP = charSetP largeCs
 largeCs = mconcat

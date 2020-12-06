@@ -12,10 +12,10 @@ import qualified Language.Lexer.Tlex.Plugin.TH       as TlexTH
 
 type LexerState = ()
 type LexerAction = ()
-type CodeUnit = Word.Word8
+type LexerCodeUnit = Word.Word8
 
-type ScannerBuilder = TlexTH.THScannerBuilder LexerState CodeUnit LexerAction
-type Pattern = Tlex.Pattern CodeUnit
+type ScannerBuilder = TlexTH.THScannerBuilder LexerState LexerCodeUnit LexerAction
+type Pattern = Tlex.Pattern LexerCodeUnit
 
 initialRule :: Pattern -> TH.Q (TH.TExp LexerAction) -> ScannerBuilder ()
 initialRule = TlexTH.thLexRule [()]
@@ -52,14 +52,14 @@ reservedOpP = Tlex.orP
     , chP '*'
     ]
 
-varidP = smallP <> Tlex.manyP (Tlex.orP [smallP, largeP, digitP])
+varidP = smallP
+    <> Tlex.manyP (Tlex.orP [smallP, largeP, digitP])
 
 litIntegerP = Tlex.someP digitP
 
 smallP = charSetP $ CharSet.range 'a' 'z'
 largeP = charSetP $ CharSet.range 'A' 'Z'
 digitP = charSetP $ CharSet.range '0' '9'
-
 
 charSetP :: CharSet.CharSet -> Pattern
 charSetP cs = TlexEnc.charSetP TlexEnc.charSetPUtf8 cs

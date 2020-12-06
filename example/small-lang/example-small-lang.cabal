@@ -21,6 +21,7 @@ executable small-lang-lexer
         tlex,
         charset,
         template-haskell,
+        bytestring,
     other-modules:
         Lexer
         LexerSample

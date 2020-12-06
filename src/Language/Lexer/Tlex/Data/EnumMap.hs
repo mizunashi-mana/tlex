@@ -4,6 +4,7 @@ module Language.Lexer.Tlex.Data.EnumMap (
     insert,
     assocs,
     keys,
+    toAscList,
     toDescList,
     lookup,
     insertOrUpdate,
@@ -43,6 +44,9 @@ assocs (EnumMap m) = [ (toEnum i, x) | (i, x) <- IntMap.assocs m ]
 
 keys :: Enum k => EnumMap k a -> [k]
 keys (EnumMap m) = [ toEnum k | k <- IntMap.keys m ]
+
+toAscList :: Enum k => EnumMap k a -> [(k, a)]
+toAscList (EnumMap m) = [ (toEnum i, x) | (i, x) <- IntMap.toAscList m ]
 
 toDescList :: Enum k => EnumMap k a -> [(k, a)]
 toDescList (EnumMap m) = [ (toEnum i, x) | (i, x) <- IntMap.toDescList m ]

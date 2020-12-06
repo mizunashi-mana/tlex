@@ -40,7 +40,7 @@ data Ast = Ast
 
 outputAst :: Ast -> Prelude.String
 outputAst ast =
-    "digraph {" ++
+    "digraph {\n" ++
     nodeDef ++
     edgeDef ++
     "}"
@@ -50,7 +50,7 @@ outputAst ast =
                 nodeId n ++
                 " [" ++
                 do case nodeLabel n of
-                    Just lb -> "label = " ++ lb ++ ","
+                    Just lb -> "label = \"" ++ lb ++ "\","
                     Nothing -> ""
                 ++
                 do case nodeShape n of
@@ -63,7 +63,7 @@ outputAst ast =
                         ++
                         ","
                 ++
-                "];"
+                "];\n"
             do nodes ast
 
         edgeDef = concatMap
@@ -73,8 +73,8 @@ outputAst ast =
                 edgeTo e ++
                 " [" ++
                 do case edgeLabel e of
-                    Just lb -> "label = " ++ lb ++ ","
+                    Just lb -> "label = \"" ++ lb ++ "\","
                     Nothing -> ""
                 ++
-                "];"
+                "];\n"
             do edges ast

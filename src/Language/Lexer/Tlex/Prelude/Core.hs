@@ -35,4 +35,4 @@ import           Data.Ord                         (Down (..))
 import           Data.Proxy                       (Proxy (..))
 import           Data.Typeable                    (Typeable)
 import           Prelude                          hiding (String, foldl, foldr,
-                                                   head, tail, ($))
+                                                   head, tail, ($), pi)

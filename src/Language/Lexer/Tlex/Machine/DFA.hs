@@ -25,11 +25,6 @@ data DFA a = DFA
     }
     deriving (Eq, Show, Functor)
 
--- |
---
--- TODO:
--- * support byte map transition.
---
 data DFAState a = DState
     { dstAccepts    :: [Tlex.Accept a]
     , dstTrans      :: IntMap.IntMap MState.StateNum

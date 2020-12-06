@@ -87,7 +87,6 @@ compareAcceptsByPriority Accept{ accPriority = p1 } Accept{ accPriority = p2 } =
 -- |
 --
 -- TODO:
--- * support byte range.
 -- * support unicode category.
 --
 data Pattern e
