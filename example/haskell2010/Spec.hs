@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Test.Hspec
-import Lexer
+import           Lexer
+import           Test.Hspec
 
-import qualified Data.ByteString               as ByteString
-import qualified Data.Either                   as Either
+import qualified Data.ByteString as ByteString
+import qualified Data.Either     as Either
 
 
 main :: IO ()

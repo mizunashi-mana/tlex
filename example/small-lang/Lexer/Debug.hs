@@ -7,9 +7,9 @@ import qualified Language.Lexer.Tlex.Machine.NFA          as NFA
 import qualified Language.Lexer.Tlex.Pipeline.MinDfa      as TlexPipeline
 import qualified Language.Lexer.Tlex.Pipeline.Nfa2Dfa     as TlexPipeline
 import qualified Language.Lexer.Tlex.Pipeline.Pattern2Nfa as TlexPipeline
-import qualified Language.Lexer.Tlex.Plugin.TH            as TlexTH
 import qualified Language.Lexer.Tlex.Plugin.Debug         as TlexDebug
-import qualified Lexer.Rules                                    as LexerRules
+import qualified Language.Lexer.Tlex.Plugin.TH            as TlexTH
+import qualified Lexer.Rules                              as LexerRules
 
 buildLexerWithoutReify :: TH.Q [TH.Dec]
 buildLexerWithoutReify = do

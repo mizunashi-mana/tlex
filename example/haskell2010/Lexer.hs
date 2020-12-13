@@ -1,12 +1,12 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Lexer where
 
+import qualified Data.ByteString               as ByteString
+import qualified GHC.Word
 import qualified Language.Lexer.Tlex.Plugin.TH as TlexTH
 import qualified Lexer.Rules
-import qualified GHC.Word
-import qualified Data.ByteString               as ByteString
 
 
 $(Lexer.Rules.buildLexer)

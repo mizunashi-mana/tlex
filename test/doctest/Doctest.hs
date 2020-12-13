@@ -4,8 +4,8 @@ import           Prelude
 
 import qualified Build_doctests     as BuildF
 import           Control.Monad
-import qualified System.IO          as IO
 import qualified System.Environment as IO
+import qualified System.IO          as IO
 import           Test.DocTest       (doctest)
 
 main :: IO ()

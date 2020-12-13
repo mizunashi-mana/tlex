@@ -37,4 +37,4 @@ import           Data.Proxy                       (Proxy (..))
 import           Data.Typeable                    (Typeable)
 import           Data.Word                        (Word, Word8)
 import           Prelude                          hiding (String, foldl, foldr,
-                                                   head, tail, ($), pi)
+                                                   head, pi, tail, ($))

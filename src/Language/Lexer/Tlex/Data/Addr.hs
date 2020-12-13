@@ -2,9 +2,9 @@ module Language.Lexer.Tlex.Data.Addr (
     addrCodeUnitsLE,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.Bits as Bits
+import qualified Data.Bits                   as Bits
 
 
 addrCodeUnitsLE :: Bits.Bits a => Integral a => Int -> a -> [Word8]

@@ -1,5 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MagicHash       #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Language.Lexer.Tlex.Output.TH (
     TlexContext (..),
@@ -15,20 +15,20 @@ module Language.Lexer.Tlex.Output.TH (
 
 import           Language.Lexer.Tlex.Prelude
 
+import qualified Data.Array                        as Array
+import qualified Data.Bits                         as Bits
 import qualified Data.IntMap.Strict                as IntMap
+import qualified GHC.Prim                          as Prim
+import qualified GHC.ST                            as ST
+import qualified GHC.Types                         as Types
 import qualified Language.Haskell.TH               as TH
 import qualified Language.Haskell.TH.Syntax        as TH
+import qualified Language.Lexer.Tlex.Data.Addr     as Addr
+import qualified Language.Lexer.Tlex.Data.Bits     as Bits
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
-import qualified Language.Lexer.Tlex.Data.Addr     as Addr
-import qualified GHC.Prim                          as Prim
-import qualified Data.Bits                         as Bits
-import qualified Language.Lexer.Tlex.Data.Bits                         as Bits
-import qualified GHC.ST                            as ST
-import qualified Data.Array                        as Array
-import qualified GHC.Types                         as Types
 
 
 class (Enum e, Monad m) => TlexContext s e m | m -> s, m -> e where

@@ -1,10 +1,10 @@
 module Language.Lexer.Tlex.Data.AddrSpec (spec) where
 
-import Test.Hspec
-import Test.QuickCheck
+import           Language.Lexer.Tlex.Prelude
+import           Test.Hspec
+import           Test.QuickCheck
 
-import Language.Lexer.Tlex.Prelude
-import Language.Lexer.Tlex.Data.Addr
+import           Language.Lexer.Tlex.Data.Addr
 
 
 spec :: Spec

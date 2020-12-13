@@ -2,9 +2,9 @@ module Language.Lexer.Tlex.Data.Bits (
     maxBitSize,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.Bits as Bits
+import qualified Data.Bits                   as Bits
 
 
 maxBitSize :: Bits.FiniteBits a => Ord a => Num a => a -> Int

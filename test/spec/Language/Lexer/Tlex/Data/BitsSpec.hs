@@ -1,9 +1,9 @@
 module Language.Lexer.Tlex.Data.BitsSpec (spec) where
 
-import Test.Hspec
+import           Language.Lexer.Tlex.Prelude
+import           Test.Hspec
 
-import Language.Lexer.Tlex.Prelude
-import Language.Lexer.Tlex.Data.Bits
+import           Language.Lexer.Tlex.Data.Bits
 
 
 spec :: Spec
