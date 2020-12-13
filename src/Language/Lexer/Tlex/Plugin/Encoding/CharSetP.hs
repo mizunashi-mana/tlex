@@ -16,12 +16,11 @@ import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.CharSet                      as CharSet
 import qualified Data.String                       as String
-import qualified Data.Word                         as Word
 import qualified Language.Lexer.Tlex.Data.Reporter as Reporter
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
 
 
-type Pattern = Tlex.Pattern Word.Word8
+type Pattern = Tlex.Pattern Word8
 
 type CharSetStdP = CharSetP Identity
 

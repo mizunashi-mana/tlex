@@ -16,6 +16,7 @@ module Language.Lexer.Tlex.Prelude.Core (
     module Data.Ord,
     module Data.Proxy,
     module Data.Typeable,
+    module Data.Word,
 ) where
 
 import           Control.Applicative
@@ -34,5 +35,6 @@ import           Data.List.NonEmpty               (NonEmpty (..))
 import           Data.Ord                         (Down (..))
 import           Data.Proxy                       (Proxy (..))
 import           Data.Typeable                    (Typeable)
+import           Data.Word                        (Word, Word8)
 import           Prelude                          hiding (String, foldl, foldr,
                                                    head, tail, ($), pi)

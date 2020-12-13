@@ -17,12 +17,15 @@ import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.IntMap.Strict                as IntMap
 import qualified Language.Haskell.TH               as TH
+import qualified Language.Haskell.TH.Syntax        as TH
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
+import qualified Language.Lexer.Tlex.Data.Addr     as Addr
 import qualified GHC.Prim                          as Prim
 import qualified Data.Bits                         as Bits
+import qualified Language.Lexer.Tlex.Data.Bits                         as Bits
 import qualified GHC.ST                            as ST
 import qualified Data.Array                        as Array
 import qualified GHC.Types                         as Types
@@ -42,7 +45,7 @@ data TlexTransStateSize
     = TlexTransStateSize8
     | TlexTransStateSize16
     | TlexTransStateSize32
-    deriving (Eq, Show, Enum)
+    deriving (Eq, Show, Enum, TH.Lift)
 
 {-# INLINE tlexLookupTlexTransTable #-}
 tlexLookupTlexTransTable :: Int -> TlexTransStateSize -> Prim.Addr#
@@ -119,10 +122,12 @@ tlexTrans = \s c -> tlexLookupTlexTransTable
     8
     TlexTransTableStateSize8
     "\x02\x00\x00\x00..."#
-    s c
+    s (c - 0)
 
 tlexAccept :: Int -> Maybe TlexSemanticAction
-tlexAccept = \x -> tlexArrayIndex table x
+tlexAccept = \x -> if x >= 120
+        then Nothing
+        else tlexArrayIndex table x
     where
         table :: TlexArray (Maybe TlexSemanticAction)
         table = tlexArray 120 [Nothing,...]
@@ -130,6 +135,7 @@ tlexAccept = \x -> tlexArrayIndex table x
 data OutputContext = OutputContext
     { outputCtxStartStateTy     :: TH.Type
     , outputCtxCodeUnitTy       :: TH.Type
+    , outputCtxCodeUnitBounds   :: (Int, Int)
     , outputCtxSemanticActionTy :: TH.Type
     }
     deriving (Eq, Show)
@@ -205,7 +211,9 @@ outputDfa ctx dfa = do
 
         , TH.SigD tlexTransFnName <$>
             [t|Int -> Int -> Int|]
-        , outputTlexTransFn dfa tlexTransFnName
+        , outputTlexTransFn dfa
+            do outputCtxCodeUnitBounds ctx
+            tlexTransFnName
 
         , TH.SigD tlexAcceptFnName <$>
             [t|Int -> Maybe $(semanticActionTy)|]
@@ -237,49 +245,89 @@ outputTlexInitialFn DFA.DFA{ dfaInitials } fnName = do
         tableList =
             let (es, l) = sequentialListFromAscList
                     [e|-1|]
-                    [ (fromEnum ss, pure do TH.LitE do outputStateNum sn)
+                    [ (fromEnum ss, TH.lift do fromEnum sn)
                     | (ss, sn) <- EnumMap.toAscList dfaInitials
                     ]
             in do
                 es' <- sequence es
                 pure (es', l)
 
-outputTlexTransFn :: DFA.DFA a -> TH.Name -> TH.Q TH.Dec
-outputTlexTransFn DFA.DFA{ dfaTrans } fnName = TH.ValD
-    do TH.VarP fnName
-    <$> do TH.NormalB <$>
-            [e|\s c -> tlexLookupTlexTransTable
-                $(tlexTransTableUnitBitSize)
-                $(tlexTransTableStateSize)
-                $(tlexTransTable)
-                s c
-            |]
-    <*> pure []
+outputTlexTransFn :: DFA.DFA a -> (Int, Int) -> TH.Name -> TH.Q TH.Dec
+outputTlexTransFn DFA.DFA{ dfaTrans } (minUnitB, maxUnitB) fnName =
+    let ubs = Bits.maxBitSize do maxUnitB - minUnitB
+        um =
+            do 1 `Bits.shiftL` ubs
+            - 1
+        l = concatMap
+            do \dstState ->
+                let smDef = case DFA.dstOtherTrans dstState of
+                        Nothing -> -1
+                        Just sm -> fromEnum sm
+                    dstTrans = DFA.dstTrans dstState
+                in map
+                    do \i -> case IntMap.lookup i dstTrans of
+                        Just sm -> fromEnum sm
+                        Nothing -> smDef
+                    [0..um]
+            do toList dfaTrans
+        sbs = Bits.maxBitSize do length dfaTrans - 1
+        sbsEnum = if
+            | ubs + sbs > 29 -> error "exceed over bit size limited"
+            | otherwise      -> stateSize sbs
+    in TH.ValD
+        do TH.VarP fnName
+        <$> do TH.NormalB <$>
+                [e|\s c -> tlexLookupTlexTransTable
+                    $(unitBitSizeExp ubs)
+                    $(TH.lift sbsEnum)
+                    $(tableAddrExp sbsEnum l)
+                    s (c - $(TH.lift minUnitB))
+                |]
+        <*> pure []
     where
-        tlexTransTableUnitBitSize = undefined
-        tlexTransTableStateSize = undefined
-        tlexTransTable = undefined
+        unitBitSizeExp ubs = pure
+            do TH.LitE do TH.IntegerL do fromIntegral ubs
+
+        stateSize sbs
+            | sbs <= 8  = TlexTransStateSize8
+            | sbs <= 16 = TlexTransStateSize16
+            | otherwise = TlexTransStateSize32
+
+        tableAddrExp ss l =
+            let us = case ss of
+                    TlexTransStateSize8  -> 1
+                    TlexTransStateSize16 -> 2
+                    TlexTransStateSize32 -> 4
+            in pure
+                do TH.LitE
+                    do TH.StringPrimL
+                        do concatMap
+                            do \sn -> Addr.addrCodeUnitsLE us
+                                do fromEnum sn
+                            do l
 
 outputTlexAcceptFn
     :: DFA.DFA (TH.Q TH.Exp) -> (TH.Q TH.Type) -> TH.Name -> TH.Q TH.Dec
 outputTlexAcceptFn DFA.DFA{ dfaTrans } semanticActionTy fnName = do
     tableValName <- TH.newName "table"
+    (es, l) <- tableList
     TH.ValD
         do TH.VarP fnName
         <$> do TH.NormalB <$>
-                [e|\x -> tlexArrayIndex $(pure do TH.VarE tableValName) x|]
+                [e|
+                    \x -> if x >= $(TH.lift l)
+                        then Nothing
+                        else tlexArrayIndex $(pure do TH.VarE tableValName) x
+                |]
         <*> sequence
                 [ TH.SigD tableValName <$>
                     [t|TlexArray (Maybe $(semanticActionTy))|]
-                , tableDec tableValName
+                , tableDec tableValName es l
                 ]
     where
-        tableDec :: TH.Name -> TH.Q TH.Dec
-        tableDec valName = TH.ValD
+        tableDec valName es l = TH.ValD
             do TH.VarP valName
-            <$> do TH.NormalB <$> do
-                    (es, l) <- tableList
-                    outputTlexArrayLit l es
+            <$> do TH.NormalB <$> outputTlexArrayLit l es
             <*> pure []
 
         tableList :: TH.Q ([TH.Exp], Int)
@@ -296,13 +344,9 @@ outputTlexAcceptFn DFA.DFA{ dfaTrans } semanticActionTy fnName = do
                 es' <- sequence es
                 pure (es', l)
 
-outputStateNum :: MState.StateNum -> TH.Lit
-outputStateNum x = TH.IntegerL do fromIntegral do fromEnum x
-
 outputTlexArrayLit :: Int -> [TH.Exp] -> TH.Q TH.Exp
-outputTlexArrayLit l es = [e|tlexArray $(arraySizeExp) $(arrayListExp)|] where
-    arraySizeExp = pure do TH.LitE do TH.IntegerL do fromIntegral l
-    arrayListExp = pure do TH.ListE es
+outputTlexArrayLit l es =
+    [e|tlexArray $(TH.lift l) $(pure do TH.ListE es)|]
 
 sequentialListFromAscList :: a -> [(Int, a)] -> ([a], Int)
 sequentialListFromAscList v xs =

@@ -40,11 +40,17 @@ data THScannerBuilderContext s e a = THScannerBuilderContext
 
 type THScannerBuilder s e a = State (THScannerBuilderContext s e a)
 
-buildTHScanner :: Enum e => TH.Type -> TH.Type -> TH.Type -> THScannerBuilder s e a () -> THScanner e
+buildTHScanner :: forall e s a. Enum e => Bounded e
+    => TH.Type -> TH.Type -> TH.Type -> THScannerBuilder s e a ()
+    -> THScanner e
 buildTHScanner codeUnitTy startStateTy actionTy builder =
     let outputCtx = TlexTH.OutputContext
             { outputCtxStartStateTy = startStateTy
             , outputCtxCodeUnitTy = codeUnitTy
+            , outputCtxCodeUnitBounds = (
+                fromEnum do minBound @e,
+                fromEnum do maxBound @e
+            )
             , outputCtxSemanticActionTy = actionTy
             }
         tlexScanner = Tlex.buildScanner do
@@ -60,29 +66,13 @@ buildTHScanner codeUnitTy startStateTy actionTy builder =
         }
 
 buildTHScannerWithReify :: forall s a e.
-    Enum e => Typeable e => Typeable s => Typeable a =>
-    THScannerBuilder s e a () -> TH.Q (THScanner e)
+    Enum e => Bounded e => Typeable e => Typeable s => Typeable a
+    => THScannerBuilder s e a () -> TH.Q (THScanner e)
 buildTHScannerWithReify builder = do
     startStateTy <- TypeableTH.liftTypeFromTypeable do Proxy @s
     codeUnitTy <- TypeableTH.liftTypeFromTypeable do Proxy @e
     actionTy <- TypeableTH.liftTypeFromTypeable do Proxy @a
-    let outputCtx = TlexTH.OutputContext
-            { outputCtxStartStateTy = startStateTy
-            , outputCtxCodeUnitTy = codeUnitTy
-            , outputCtxSemanticActionTy = actionTy
-            }
-        tlexScanner = Tlex.buildScanner do
-            modify' \ctx0 -> thScannerBuilderCtxTlexScannerBuilderCtx
-                do execState builder do
-                    THScannerBuilderContext
-                        { thScannerBuilderCtxOutputCtx = outputCtx
-                        , thScannerBuilderCtxTlexScannerBuilderCtx = ctx0
-                        }
-    pure do
-        THScanner
-            { thScannerOutputCtx = outputCtx
-            , thScannerTlexScanner = tlexScanner
-            }
+    pure do buildTHScanner codeUnitTy startStateTy actionTy builder
 
 liftTlexScannerBuilder :: Enum e => Tlex.ScannerBuilder s e (TH.Q TH.Exp) a -> THScannerBuilder s e f a
 liftTlexScannerBuilder builder = do

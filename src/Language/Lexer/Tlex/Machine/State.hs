@@ -113,7 +113,7 @@ assocsMap (StateMap m) = coerce do IntMap.assocs m
 
 
 newtype StateArray a = StateArray (Array.Array Int a)
-    deriving (Eq, Show, Functor)
+    deriving (Eq, Show, Functor, Foldable)
 
 totalStateMapToArray :: StateNum -> StateMap a -> StateArray a
 totalStateMapToArray (StateNum boundState) (StateMap m) = StateArray

@@ -6,7 +6,6 @@ import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.CharSet                                   as CharSet
 import qualified Data.IntSet                                    as IntSet
-import qualified Data.Word                                      as Word
 import qualified Language.Lexer.Tlex.Data.EnumMap               as EnumMap
 import qualified Language.Lexer.Tlex.Data.EnumSet               as EnumSet
 import qualified Language.Lexer.Tlex.Data.NonEmptyEnumStringSet as NonEmptyEnumStringSet
@@ -15,7 +14,7 @@ import qualified Language.Lexer.Tlex.Syntax                     as Tlex
 
 
 charSetToByteStringSetUtf8 :: CharSetP.CharSetEncoder m
-    => IntSet.IntSet -> m (NonEmptyEnumStringSet.NonEmptyEnumStringSet Word.Word8)
+    => IntSet.IntSet -> m (NonEmptyEnumStringSet.NonEmptyEnumStringSet Word8)
 charSetToByteStringSetUtf8 is = foldM
         do \s c -> foldStep s c
         do NonEmptyEnumStringSet.empty
@@ -49,7 +48,7 @@ charSetToByteStringSetUtf8 is = foldM
                         do (0xF0 + c') :| l
                         do s
 
-        stringTails :: Int -> Int -> (Word.Word8, [Word.Word8])
+        stringTails :: Int -> Int -> (Word8, [Word8])
         stringTails c n = stringTails' c [] n
         stringTails' c l = \case
             0 -> (fromIntegral c, l)

@@ -1,74 +1,22 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Lexer where
 
-import qualified Data.CharSet                        as CharSet
-import qualified Data.CharSet.Unicode                as UniCharSet
-import qualified Data.Word                           as Word
-import qualified Language.Haskell.TH                 as TH
-import qualified Language.Lexer.Tlex                 as Tlex
-import qualified Language.Lexer.Tlex.Plugin.Encoding as TlexEnc
-import qualified Language.Lexer.Tlex.Plugin.TH       as TlexTH
+import qualified Language.Lexer.Tlex.Plugin.TH as TlexTH
+import qualified Lexer.Rules
+import qualified GHC.Word
+import qualified Data.ByteString               as ByteString
 
-type LexerState = ()
-type LexerAction = ()
-type LexerCodeUnit = Word.Word8
 
-type ScannerBuilder = TlexTH.THScannerBuilder LexerState LexerCodeUnit LexerAction
-type Pattern = Tlex.Pattern LexerCodeUnit
+$(Lexer.Rules.buildLexer)
 
-initialRule :: Pattern -> TH.Q (TH.TExp LexerAction) -> ScannerBuilder ()
-initialRule = TlexTH.thLexRule [()]
-
-buildLexer :: TH.Q [TH.Dec]
-buildLexer = do
-    lexer <- TlexTH.buildTHScannerWithReify lexerRules
-    TlexTH.outputScanner lexer
-
-lexerRules :: ScannerBuilder ()
-lexerRules = do
-    initialRule (Tlex.someP whitecharP) [||()||]
-    initialRule specialP [||()||]
-    initialRule reservedOpP [||()||]
-    initialRule varidP [||()||]
-    initialRule litIntegerP [||()||]
-
-specialP = charsP
-    [ '('
-    , ')'
-    ]
-
-whitecharP = charsP
-    [ ' '
-    , '\t'
-    , '\n'
-    , '\r'
-    ]
-
-reservedOpP = Tlex.orP
-    [ chP '\\'
-    , stringP "->"
-    , chP '+'
-    , chP '*'
-    ]
-
-varidP = smallP
-    <> Tlex.manyP (Tlex.orP [smallP, largeP, digitP])
-
-litIntegerP = Tlex.someP digitP
-
-smallP = charSetP $ CharSet.range 'a' 'z'
-largeP = charSetP $ CharSet.range 'A' 'Z'
-digitP = charSetP $ CharSet.range '0' '9'
-
-charSetP :: CharSet.CharSet -> Pattern
-charSetP cs = TlexEnc.charSetP TlexEnc.charSetPUtf8 cs
-
-chP :: Char -> Pattern
-chP c = TlexEnc.chP TlexEnc.charSetPUtf8 c
-
-charsP :: [Char] -> Pattern
-charsP cs = TlexEnc.charsP TlexEnc.charSetPUtf8 cs
-
-stringP :: String -> Pattern
-stringP s = TlexEnc.stringP TlexEnc.charSetPUtf8 s
+lexByteString :: ByteString.ByteString -> Either String [ByteString.ByteString]
+lexByteString input = go (ByteString.unpack input) id where
+    go s acc = case TlexTH.runInputString (tlexScan ()) s of
+        (TlexTH.TlexEndOfInput, _)      -> Right $ acc []
+        (TlexTH.TlexError, ctx)         -> Left $ show (ctx, acc [])
+        (TlexTH.TlexAccepted ctx (), _) ->
+            let rest = TlexTH.inputStringCtxRest ctx
+                consumed = TlexTH.inputStringCtxPos ctx
+            in go rest (\n -> acc (ByteString.pack (take consumed s):n))
