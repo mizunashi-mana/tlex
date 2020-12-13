@@ -1,3 +1,1 @@
-packages:
-    tlex.cabal
-    example/*/*.cabal
+packages: package/*/*.cabal example/*/*.cabal

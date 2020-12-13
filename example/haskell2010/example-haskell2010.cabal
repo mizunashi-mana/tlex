@@ -18,11 +18,13 @@ common general
         base,
         bytestring,
         tlex,
+        tlex-encoding,
+        tlex-th,
         charset,
         template-haskell,
     other-modules:
         Lexer
-        Lexer.Debug
+        -- Lexer.Debug
         Lexer.Rules
 
 executable haskell2010-lexer
