@@ -1,1 +1,3 @@
-packages: package/*/*.cabal example/*/*.cabal
+packages:
+  package/*/*.cabal
+  example/*/*.cabal
