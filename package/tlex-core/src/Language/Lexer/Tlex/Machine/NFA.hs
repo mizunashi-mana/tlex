@@ -16,10 +16,10 @@ module Language.Lexer.Tlex.Machine.NFA
 
 import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.IntSet                       as IntSet
-import qualified Language.Lexer.Tlex.Data.Graph    as Graph
-import qualified Language.Lexer.Tlex.Machine.State as MState
+import qualified Data.IntSet                         as IntSet
+import qualified Language.Lexer.Tlex.Data.Graph      as Graph
 import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern
+import qualified Language.Lexer.Tlex.Machine.State   as MState
 
 
 data NFA a = NFA

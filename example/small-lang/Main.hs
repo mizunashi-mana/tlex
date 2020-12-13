@@ -1,9 +1,9 @@
 module Main where
 
+import qualified Data.ByteString    as ByteString
 import qualified Lexer
 import qualified System.Environment as System
 import qualified System.Exit        as System
-import qualified Data.ByteString    as ByteString
 
 
 main :: IO ()

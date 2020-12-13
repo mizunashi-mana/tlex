@@ -7,8 +7,8 @@ import           Language.Lexer.Tlex.Prelude
 import qualified Language.Lexer.Tlex.Data.EnumSet    as EnumSet
 import qualified Language.Lexer.Tlex.Data.SymEnumSet as SymEnumSet
 import qualified Language.Lexer.Tlex.Machine.NFA     as NFA
-import qualified Language.Lexer.Tlex.Machine.State   as MState
 import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern
+import qualified Language.Lexer.Tlex.Machine.State   as MState
 
 
 pattern2Nfa

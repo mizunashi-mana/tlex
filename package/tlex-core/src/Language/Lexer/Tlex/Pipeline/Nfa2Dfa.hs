@@ -4,14 +4,14 @@ module Language.Lexer.Tlex.Pipeline.Nfa2Dfa (
 
 import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.HashMap.Strict               as HashMap
-import qualified Data.IntMap.Strict                as IntMap
-import qualified Data.IntSet                       as IntSet
-import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
-import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
-import qualified Language.Lexer.Tlex.Machine.NFA   as NFA
-import qualified Language.Lexer.Tlex.Machine.State as MState
+import qualified Data.HashMap.Strict                 as HashMap
+import qualified Data.IntMap.Strict                  as IntMap
+import qualified Data.IntSet                         as IntSet
+import qualified Language.Lexer.Tlex.Data.EnumMap    as EnumMap
+import qualified Language.Lexer.Tlex.Machine.DFA     as DFA
+import qualified Language.Lexer.Tlex.Machine.NFA     as NFA
 import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern
+import qualified Language.Lexer.Tlex.Machine.State   as MState
 
 
 nfa2Dfa :: NFA.NFA a -> DFA.DFA a
