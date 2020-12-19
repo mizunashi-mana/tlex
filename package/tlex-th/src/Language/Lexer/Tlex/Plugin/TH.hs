@@ -3,6 +3,8 @@
 module Language.Lexer.Tlex.Plugin.TH (
     TlexTH.TlexContext (..),
     TlexTH.TlexResult (..),
+    TlexTH.Runner (..),
+    TlexTH.runRunner,
     THScanner (..),
     THScannerBuilderContext,
     THScannerBuilder,
@@ -11,9 +13,6 @@ module Language.Lexer.Tlex.Plugin.TH (
     liftTlexScannerBuilder,
     thLexRule,
     outputScanner,
-    InputString (..),
-    InputStringContext (..),
-    runInputString,
 ) where
 
 import           Language.Lexer.Tlex.Prelude
@@ -117,42 +116,3 @@ outputScanner scanner =
         Debug.trace "outputing DFA..." do
 #endif
         TlexTH.outputDfa outputCtx minDfa
-
-
-data InputStringContext e = InputStringContext
-    { inputStringCtxRest :: [e]
-    , inputStringCtxPos  :: Int
-    }
-    deriving (Eq, Show)
-
-initialInputStringContext :: [e] -> InputStringContext e
-initialInputStringContext s = InputStringContext
-    { inputStringCtxRest = s
-    , inputStringCtxPos = 0
-    }
-
-newtype InputString e a = InputString
-    { unInputString :: State (InputStringContext e) a
-    }
-    deriving (
-        Functor,
-        Applicative,
-        Monad
-    ) via State (InputStringContext e)
-
-runInputString :: InputString e a -> [e] -> (a, InputStringContext e)
-runInputString (InputString runner) input =
-    runState runner do initialInputStringContext input
-
-instance Enum e => TlexTH.TlexContext (InputStringContext e) e (InputString e) where
-    tlexGetInputPart = InputString do
-        inputCtx <- get
-        case inputStringCtxRest inputCtx of
-            []  -> pure Nothing
-            c:r -> do
-                put do InputStringContext
-                        { inputStringCtxRest = r
-                        , inputStringCtxPos = succ do inputStringCtxPos inputCtx
-                        }
-                pure do Just c
-    tlexGetMark = InputString get

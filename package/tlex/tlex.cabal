@@ -79,6 +79,7 @@ common general
 
         -- project depends
         tlex-core,
+        containers,
 
     autogen-modules:
         Paths_tlex
@@ -99,7 +100,9 @@ library
     exposed-modules:
         Language.Lexer.Tlex
         Language.Lexer.Tlex.Syntax
+        Language.Lexer.Tlex.Runner
         Language.Lexer.Tlex.Pipeline.Scanner2Nfa
+        Language.Lexer.Tlex.Data.InputString
 
 test-suite doctest
     import:

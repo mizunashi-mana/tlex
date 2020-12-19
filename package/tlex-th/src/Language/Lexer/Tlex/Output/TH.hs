@@ -4,6 +4,8 @@
 module Language.Lexer.Tlex.Output.TH (
     TlexContext (..),
     TlexResult (..),
+    Runner (..),
+    runRunner,
     TlexTransStateSize (..),
     tlexLookupTlexTransTable,
     TlexArray,
@@ -29,17 +31,8 @@ import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import qualified Language.Lexer.Tlex.Syntax        as Tlex
+import           Language.Lexer.Tlex.Runner
 
-
-class (Enum e, Monad m) => TlexContext s e m | m -> s, m -> e where
-    tlexGetInputPart :: m (Maybe e)
-    tlexGetMark :: m s
-
-data TlexResult s a
-    = TlexEndOfInput
-    | TlexError
-    | TlexAccepted s a
-    deriving (Eq, Show)
 
 data TlexTransStateSize
     = TlexTransStateSize8
@@ -76,56 +69,29 @@ type TlexSemanticAction = ...
 type TlexCodeUnit = ...
 
 tlexScan :: TlexContext s TlexCodeUnit m => TlexStartState -> m (TlexResult s TlexSemanticAction)
-tlexScan s0 = go (tlexInitial (fromEnum s0)) where
-    go s = case tlexAccept s of
-        Just x  -> do
-            acc <- buildAccepted x
-            mc <- tlexGetInputPart
-            case mc of
-                Nothing -> pure acc
-                Just c  -> goTrans s c (Just acc)
-        Nothing -> do
-            mc <- tlexGetInputPart
-            case mc of
-                Nothing -> pure TlexEndOfInput
-                Just c  -> goTrans s c Nothing
+tlexScan s0 = runRunner runner s0
+    where
+        runner = Runner
+            { tlexInitial = thTlexInitial
+            , tlexAccept = thTlexAccept
+            , tlexTrans = thTlexTrans
+            }
 
-    goTrans s c preAccepted = case tlexTrans s (fromEnum c) of
-        -1 -> goEnd preAccepted
-        ns -> do
-            nacc <- case tlexAccept ns of
-                Just x -> do
-                    acc <- buildAccepted x
-                    pure (Just acc)
-                Nothing -> pure preAccepted
-            mc <- tlexGetInputPart
-            case mc of
-                Nothing -> goEnd nacc
-                Just nc -> goTrans ns nc nacc
-
-    buildAccepted x = do
-        m <- tlexGetMark
-        pure (TlexAccepted m x)
-
-    goEnd preAccepted = case preAccepted of
-        Nothing  -> pure TlexError
-        Just acc -> pure acc
-
-tlexInitial :: Int -> Int
-tlexInitial = \x -> tlexArrayIndex table x
+thTlexInitial :: Int -> Int
+thTlexInitial = \x -> tlexArrayIndex tlexInitialTable x
     where
         table :: TlexArray Int
         table = tlexArray 10 [10,...]
 
-tlexTrans :: Int -> Int -> Int
-tlexTrans = \s c -> tlexLookupTlexTransTable
+thTlexTrans :: Int -> Int -> Int
+thTlexTrans = \s c -> tlexLookupTlexTransTable
     8
     TlexTransTableStateSize8
     "\x02\x00\x00\x00..."#
     s (c - 0)
 
-tlexAccept :: Int -> Maybe TlexSemanticAction
-tlexAccept = \x -> if x >= 120
+thTlexAccept :: Int -> Maybe TlexSemanticAction
+thTlexAccept = \x -> if x >= 120
         then Nothing
         else tlexArrayIndex table x
     where
@@ -146,16 +112,16 @@ outputDfa ctx dfa = do
         codeUnitTyName = TH.mkName "TlexCodeUnit"
         semanticActionTyName = TH.mkName "TlexSemanticAction"
         tlexScanFnName = TH.mkName "tlexScan"
-        tlexInitialFnName = TH.mkName "tlexInitial"
-        tlexTransFnName = TH.mkName "tlexTrans"
-        tlexAcceptFnName = TH.mkName "tlexAccept"
+        thTlexInitialFnName = TH.mkName "thTlexInitial"
+        thTlexTransFnName = TH.mkName "thTlexTrans"
+        thTlexAcceptFnName = TH.mkName "thTlexAccept"
 
     let startStateTy = pure @TH.Q do TH.ConT startStateTyName
         codeUnitTy = pure @TH.Q do TH.ConT codeUnitTyName
         semanticActionTy = pure @TH.Q do TH.ConT semanticActionTyName
-        tlexInitialFn = pure @TH.Q do TH.VarE tlexInitialFnName
-        tlexTransFn = pure @TH.Q do TH.VarE tlexTransFnName
-        tlexAcceptFn = pure @TH.Q do TH.VarE tlexAcceptFnName
+        thTlexInitialFn = pure @TH.Q do TH.VarE thTlexInitialFnName
+        thTlexTransFn = pure @TH.Q do TH.VarE thTlexTransFnName
+        thTlexAcceptFn = pure @TH.Q do TH.VarE thTlexAcceptFnName
 
     sequence
         [ pure do TH.TySynD startStateTyName [] do outputCtxStartStateTy ctx
@@ -168,56 +134,27 @@ outputDfa ctx dfa = do
         |]
         , TH.ValD
             do TH.VarP tlexScanFnName
-            <$> do TH.NormalB <$> [e|\s0 -> go ($(tlexInitialFn) (fromEnum s0))|]
+            <$> do TH.NormalB <$> [e|\s0 -> runRunner runner s0|]
             <*> [d|
-                go s = case $(tlexAcceptFn) s of
-                    Just x  -> do
-                        acc <- buildAccepted x
-                        mc <- tlexGetInputPart
-                        case mc of
-                            Nothing -> pure acc
-                            Just c  -> goTrans s c (Just acc)
-                    Nothing -> do
-                        mc <- tlexGetInputPart
-                        case mc of
-                            Nothing -> pure TlexEndOfInput
-                            Just c  -> goTrans s c Nothing
-
-                goTrans s c preAccepted = case $(tlexTransFn) s (fromEnum c) of
-                    -1 -> goEnd preAccepted
-                    ns -> do
-                        nacc <- case $(tlexAcceptFn) ns of
-                            Just x -> do
-                                acc <- buildAccepted x
-                                pure (Just acc)
-                            Nothing -> pure preAccepted
-                        mc <- tlexGetInputPart
-                        case mc of
-                            Nothing -> goEnd nacc
-                            Just nc -> goTrans ns nc nacc
-
-                buildAccepted x = do
-                    m <- tlexGetMark
-                    pure (TlexAccepted m x)
-
-                goEnd preAccepted = case preAccepted of
-                    Nothing  -> pure TlexError
-                    Just acc -> pure acc
+                runner = Runner
+                    $(thTlexInitialFn)
+                    $(thTlexAcceptFn)
+                    $(thTlexTransFn)
             |]
 
-        , TH.SigD tlexInitialFnName <$>
+        , TH.SigD thTlexInitialFnName <$>
             [t|Int -> Int|]
-        , outputTlexInitialFn dfa tlexInitialFnName
+        , outputTlexInitialFn dfa thTlexInitialFnName
 
-        , TH.SigD tlexTransFnName <$>
+        , TH.SigD thTlexTransFnName <$>
             [t|Int -> Int -> Int|]
         , outputTlexTransFn dfa
             do outputCtxCodeUnitBounds ctx
-            tlexTransFnName
+            thTlexTransFnName
 
-        , TH.SigD tlexAcceptFnName <$>
+        , TH.SigD thTlexAcceptFnName <$>
             [t|Int -> Maybe $(semanticActionTy)|]
-        , outputTlexAcceptFn dfa semanticActionTy tlexAcceptFnName
+        , outputTlexAcceptFn dfa semanticActionTy thTlexAcceptFnName
         ]
 
 outputTlexInitialFn :: DFA.DFA a -> TH.Name -> TH.Q TH.Dec
