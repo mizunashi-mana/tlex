@@ -11,6 +11,8 @@ import qualified Language.Haskell.TH                 as TH
 import qualified Language.Lexer.Tlex                 as Tlex
 import qualified Language.Lexer.Tlex.Plugin.Encoding as TlexEnc
 import qualified Language.Lexer.Tlex.Plugin.TH       as TlexTH
+import           Data.ByteString                     (ByteString)
+import qualified Data.ByteString.Char8               as ByteString
 
 
 data LexerState
@@ -18,7 +20,7 @@ data LexerState
     | NestedComment
     deriving (Eq, Show, Enum)
 
-type LexerAction = ()
+type LexerAction = ByteString -> Token
 type LexerCodeUnit = Word.Word8
 
 type ScannerBuilder = TlexTH.THScannerBuilder LexerState LexerCodeUnit LexerAction
@@ -32,36 +34,58 @@ nestedCommentRule = TlexTH.thLexRule [NestedComment]
 
 buildLexer :: TH.Q [TH.Dec]
 buildLexer = do
-    lexer <- TlexTH.buildTHScannerWithReify lexerRules
+    stateTy <- [t|LexerState|]
+    codeUnitTy <- [t|LexerCodeUnit|]
+    actionTy <- [t|LexerAction|]
+    let lexer = TlexTH.buildTHScanner codeUnitTy stateTy actionTy lexerRules
     TlexTH.outputScanner lexer
+
+data Token
+    = TokWhiteSpace
+    | TokLineComment ByteString
+    | TokOpenComment
+    | TokCloseComment
+    | TokEnclosedCommentChar ByteString
+    | TokSpecial ByteString
+    | TokReservedId ByteString
+    | TokReservedOp ByteString
+    | TokQualifiedVarId ByteString
+    | TokQualifiedConId ByteString
+    | TokQualifiedVarSym ByteString
+    | TokQualifiedConSym ByteString
+    | TokLitInteger ByteString
+    | TokLitFloat ByteString
+    | TokLitChar ByteString
+    | TokLitString ByteString
+    deriving (Eq, Show)
 
 lexerRules :: ScannerBuilder ()
 lexerRules = do
-    initialRule (Tlex.someP whitecharP) [||()||]
+    initialRule (Tlex.someP whitecharP) [||\_ -> TokWhiteSpace||]
 
-    initialRule commentP [||()||]
+    initialRule commentP [||TokLineComment||]
 
-    initialRule openComP [||()||]
+    initialRule openComP [||\_ -> TokOpenComment||]
     -- closeComP should be the head on nested comment mode to avoid conflicting.
-    nestedCommentRule closeComP [||()||]
-    nestedCommentRule anyWithNewlineP [||()||]
+    nestedCommentRule closeComP [||\_ -> TokCloseComment||]
+    nestedCommentRule anyWithNewlineP [||TokEnclosedCommentChar||]
 
-    initialRule specialP [||()||]
+    initialRule specialP [||TokSpecial||]
 
     -- reservedIdP should be before qvarid to avoid conflicting.
-    initialRule reservedIdP [||()||]
+    initialRule reservedIdP [||TokReservedId||]
     -- reservedOpP should be before qvarsym / qconsym to avoid conflicting.
-    initialRule reservedOpP [||()||]
+    initialRule reservedOpP [||TokReservedOp||]
 
-    initialRule qvaridP [||()||]
-    initialRule qconidP [||()||]
-    initialRule qvarsymP [||()||]
-    initialRule qconsymP [||()||]
+    initialRule qvaridP [||TokQualifiedVarId||]
+    initialRule qconidP [||TokQualifiedConId||]
+    initialRule qvarsymP [||TokQualifiedVarSym||]
+    initialRule qconsymP [||TokQualifiedConSym||]
 
-    initialRule litIntegerP [||()||]
-    initialRule litFloatP [||()||]
-    initialRule litCharP [||()||]
-    initialRule litStringP [||()||]
+    initialRule litIntegerP [||TokLitInteger||]
+    initialRule litFloatP [||TokLitFloat||]
+    initialRule litCharP [||TokLitChar||]
+    initialRule litStringP [||TokLitString||]
 
 -- See https://www.haskell.org/onlinereport/haskell2010/haskellch2.html#x7-160002.2
 -- See also, https://gitlab.haskell.org/ghc/ghc/-/blob/ghc-8.10.2-release/compiler/parser/Lexer.x#L2136

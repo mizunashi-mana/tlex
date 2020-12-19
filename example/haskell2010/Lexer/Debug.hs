@@ -11,14 +11,6 @@ import qualified Language.Lexer.Tlex.Plugin.TH            as TlexTH
 import qualified Lexer.Rules                              as LexerRules
 
 
-buildLexerWithoutReify :: TH.Q [TH.Dec]
-buildLexerWithoutReify = do
-    stateTy <- [t|LexerRules.LexerState|]
-    codeUnitTy <- [t|LexerRules.LexerCodeUnit|]
-    actionTy <- [t|LexerRules.LexerAction|]
-    let lexer = TlexTH.buildTHScanner stateTy codeUnitTy actionTy LexerRules.lexerRules
-    TlexTH.outputScanner lexer
-
 lexer = TlexTH.buildTHScanner
     (TH.ConT (TH.mkName "LexerState"))
     (TH.ConT (TH.mkName "LexerCodeUnit"))
@@ -29,5 +21,5 @@ nfa = NFA.buildNFA $ TlexPipeline.scanner2Nfa tlexLexer
 dfa = TlexPipeline.nfa2Dfa nfa
 minDfa = TlexPipeline.minDfa dfa
 lexerProgram = do
-    ast <- TH.runQ buildLexerWithoutReify
+    ast <- TH.runQ LexerRules.buildLexer
     print $ TH.ppr ast
