@@ -3,16 +3,9 @@ module Language.Lexer.Tlex.Runner (
     TlexResult (..),
     Runner (..),
     runRunner,
-    buildRunner,
 ) where
 
 import Language.Lexer.Tlex.Prelude
-
-import qualified Language.Lexer.Tlex.Machine.DFA as DFA
-import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern
-import qualified Language.Lexer.Tlex.Machine.State as MState
-import qualified Language.Lexer.Tlex.Data.EnumMap    as EnumMap
-import qualified Data.IntMap                         as IntMap
 
 
 class (Enum e, Monad m) => TlexContext p e m | m -> p, m -> e where
@@ -74,36 +67,3 @@ runRunner runner s0 = case tlexInitial runner do fromEnum s0 of
         goEnd preAccepted = case preAccepted of
             Nothing  -> pure TlexError
             Just acc -> pure acc
-
-buildRunner :: Enum e => DFA.DFA a -> Runner e a
-buildRunner dfa = Runner
-    { tlexInitial = dfaTlexInitial
-    , tlexAccept = dfaTlexAccept
-    , tlexTrans = dfaTlexTrans
-    }
-    where
-        dfaTlexInitial s0 =
-            let ms = EnumMap.lookup
-                    do toEnum s0
-                    do DFA.dfaInitials dfa
-            in case ms of
-                Nothing -> -1
-                Just s  -> fromEnum s
-
-        dfaTlexAccept s0 =
-            let dstState = MState.indexArray
-                    do DFA.dfaTrans dfa
-                    do toEnum s0
-            in case DFA.dstAccepts dstState of
-                []    -> Nothing
-                acc:_ -> Just do Pattern.accSemanticAction acc
-
-        dfaTlexTrans s0 c =
-            let dstState = MState.indexArray
-                    do DFA.dfaTrans dfa
-                    do toEnum s0
-            in case IntMap.lookup c do DFA.dstTrans dstState of
-                Just s1 -> fromEnum s1
-                Nothing -> case DFA.dstOtherTrans dstState of
-                    Just s1 -> fromEnum s1
-                    Nothing -> -1

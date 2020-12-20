@@ -102,6 +102,7 @@ library
         Language.Lexer.Tlex.Syntax
         Language.Lexer.Tlex.Runner
         Language.Lexer.Tlex.Pipeline.Scanner2Nfa
+        Language.Lexer.Tlex.Pipeline.Dfa2Runner
         Language.Lexer.Tlex.Data.InputString
 
 test-suite doctest
