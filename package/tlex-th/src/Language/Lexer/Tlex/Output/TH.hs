@@ -30,8 +30,8 @@ import qualified Language.Lexer.Tlex.Data.Bits     as Bits
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
-import qualified Language.Lexer.Tlex.Syntax        as Tlex
 import           Language.Lexer.Tlex.Runner
+import qualified Language.Lexer.Tlex.Syntax        as Tlex
 
 
 data TlexTransStateSize

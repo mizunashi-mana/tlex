@@ -6,7 +6,7 @@ module Language.Lexer.Tlex.Data.InputString (
 
 import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Lexer.Tlex.Runner               as Tlex
+import qualified Language.Lexer.Tlex.Runner  as Tlex
 
 
 data InputStringContext e = InputStringContext

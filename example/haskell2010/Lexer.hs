@@ -3,17 +3,17 @@
 
 module Lexer where
 
-import qualified Data.ByteString               as ByteString
-import qualified Language.Lexer.Tlex           as Tlex
-import qualified Lexer.Rules                   as LexerRules
+import qualified Data.ByteString     as ByteString
+import qualified Language.Lexer.Tlex as Tlex
+import qualified Lexer.Rules         as LexerRules
 
 
 $(LexerRules.buildLexer)
 
 data SpannedToken = SpannedToken
-    { token :: LexerRules.Token
+    { token         :: LexerRules.Token
     , rawByteString :: ByteString.ByteString
-    , tokenSpan :: (Int, Int)
+    , tokenSpan     :: (Int, Int)
     }
     deriving (Eq, Show)
 

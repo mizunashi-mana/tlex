@@ -2,14 +2,14 @@ module Language.Lexer.Tlex.Pipeline.Dfa2Runner (
     dfa2Runner,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Lexer.Tlex.Machine.DFA as DFA
-import qualified Language.Lexer.Tlex.Runner as Tlex
+import qualified Data.IntMap                         as IntMap
 import qualified Language.Lexer.Tlex.Data.EnumMap    as EnumMap
+import qualified Language.Lexer.Tlex.Machine.DFA     as DFA
 import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern
-import qualified Language.Lexer.Tlex.Machine.State as MState
-import qualified Data.IntMap as IntMap
+import qualified Language.Lexer.Tlex.Machine.State   as MState
+import qualified Language.Lexer.Tlex.Runner          as Tlex
 
 
 dfa2Runner :: Enum e => DFA.DFA a -> Tlex.Runner e a

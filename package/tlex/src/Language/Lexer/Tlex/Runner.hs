@@ -5,7 +5,7 @@ module Language.Lexer.Tlex.Runner (
     runRunner,
 ) where
 
-import Language.Lexer.Tlex.Prelude
+import           Language.Lexer.Tlex.Prelude
 
 
 class (Enum e, Monad m) => TlexContext p e m | m -> p, m -> e where
@@ -22,9 +22,9 @@ data TlexResult p a
 data Runner e a = Runner
     { tlexInitial :: Int -> Int
     -- ^ StartState -> (StateNum | -1)
-    , tlexAccept :: Int -> Maybe a
+    , tlexAccept  :: Int -> Maybe a
     -- ^ StateNum -> Maybe Action
-    , tlexTrans :: Int -> Int -> Int
+    , tlexTrans   :: Int -> Int -> Int
     -- ^ StateNum -> CodeUnit -> (StateNum | -1)
     }
     deriving Functor
