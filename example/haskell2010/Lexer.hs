@@ -3,10 +3,10 @@
 
 module Lexer where
 
-import qualified Data.ByteString               as ByteString
-import qualified Language.Lexer.Tlex           as Tlex
-import qualified Lexer.Rules                   as LexerRules
-import qualified Data.Word                     as Word
+import qualified Data.ByteString     as ByteString
+import qualified Data.Word           as Word
+import qualified Language.Lexer.Tlex as Tlex
+import qualified Lexer.Rules         as LexerRules
 
 
 $(LexerRules.buildLexer)
@@ -20,8 +20,8 @@ data SpannedToken = SpannedToken
 
 data LexerContext = LexerContext
     { commentNestLevel :: Int
-    , currentPosition :: Int
-    , restString :: [Word.Word8]
+    , currentPosition  :: Int
+    , restString       :: [Word.Word8]
     }
     deriving (Eq, Show)
 

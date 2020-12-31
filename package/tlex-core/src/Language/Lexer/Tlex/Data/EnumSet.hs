@@ -12,11 +12,10 @@ module Language.Lexer.Tlex.Data.EnumSet (
     toIntSet,
 ) where
 
-import Language.Lexer.Tlex.Prelude hiding (empty, toList)
+import           Language.Lexer.Tlex.Prelude hiding (empty, toList)
 
-
-import qualified Data.Hashable as Hashable
-import qualified Data.IntSet   as IntSet
+import qualified Data.Hashable               as Hashable
+import qualified Data.IntSet                 as IntSet
 
 
 newtype EnumSet a = EnumSet IntSet.IntSet
