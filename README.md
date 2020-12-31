@@ -1,6 +1,6 @@
 # Tlex: A Generator for Lexical Analysers
 
-![Actions status](https://github.com/mizunashi-mana/tlex/workflows/.github/workflows/haskell.yml/badge.svg)
+![Haskell CI](https://github.com/mizunashi-mana/tlex/workflows/Haskell%20CI/badge.svg)
 
 ## Installation
 
