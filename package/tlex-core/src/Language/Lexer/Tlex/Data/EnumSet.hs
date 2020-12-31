@@ -6,12 +6,14 @@ module Language.Lexer.Tlex.Data.EnumSet (
     union,
     intersection,
     difference,
+    partition,
     fromList,
     toList,
     toIntSet,
 ) where
 
-import           Prelude
+import Language.Lexer.Tlex.Prelude hiding (empty, toList)
+
 
 import qualified Data.Hashable as Hashable
 import qualified Data.IntSet   as IntSet
@@ -43,6 +45,12 @@ intersection (EnumSet s1) (EnumSet s2) = EnumSet do IntSet.intersection s1 s2
 
 difference :: Enum a => EnumSet a -> EnumSet a -> EnumSet a
 difference (EnumSet s1) (EnumSet s2) = EnumSet do IntSet.difference s1 s2
+
+partition :: Enum a => (a -> Bool) -> EnumSet a -> (EnumSet a, EnumSet a)
+partition p (EnumSet s) = coerce
+    do IntSet.partition
+        do \i -> p do toEnum i
+        s
 
 fromList :: Enum a => [a] -> EnumSet a
 fromList xs = EnumSet do IntSet.fromList [ fromEnum x | x <- xs ]

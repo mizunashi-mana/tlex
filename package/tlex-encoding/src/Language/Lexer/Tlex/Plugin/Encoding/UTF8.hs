@@ -36,51 +36,7 @@ charSetPUtf8 = CharSetP.CharSetP
 
         goComplement is = do
             bsSet <- charSetToByteStringSetUtf8 is
-            pure do complementP bsSet
-
-        complementP s =
-            let m = NonEmptyEnumStringSet.enumStrings s
-                ks = EnumSet.fromList do EnumMap.keys m
-            in Tlex.orP
-                [ complementP1 s
-                , complementP2 m ks
-                , complementP3 m ks
-                , complementP4 m ks
-                ]
-
-        complementP1 s =
-            let ks = EnumSet.fromList [0x00..0x7F]
-                    `EnumSet.difference` NonEmptyEnumStringSet.singleEnums s
-            in Tlex.straightEnumSetP ks
-
-        complementP2 m ks =
-            let ks' = EnumSet.fromList [0xC2..0xDF]
-                    `EnumSet.intersection` ks
-                rks = EnumSet.fromList [0xC2..0xDF]
-                    `EnumSet.difference` ks'
-                rksP = Tlex.straightEnumSetP rks
-                    <> Tlex.enumsP [0x80..0xBF]
-            in Tlex.orP do
-                rksP : do
-                    k <- EnumSet.toList ks'
-                    sk <- toList do EnumMap.lookup k m
-                    pure do
-                        Tlex.straightEnumSetP do
-                            EnumSet.fromList [0x80..0xBF] `EnumSet.difference`
-                                NonEmptyEnumStringSet.singleEnums sk
-
-        complementP3 _ ks =
-            let ks' = EnumSet.fromList [0xE1..0xEF]
-                    `EnumSet.intersection` ks
-                rks = EnumSet.fromList [0xE1..0xEF]
-                    `EnumSet.difference` ks'
-                rksP = Tlex.straightEnumSetP rks
-                    <> Tlex.enumsP [0x80..0xBF]
-                    <> Tlex.enumsP [0x80..0xBF]
-            in Tlex.orP do
-                rksP : [] -- undefined m
-
-        complementP4 _ _ = mempty -- undefined
+            pure do complementPFromEnumStrings bsSet
 
 charSetToByteStringSetUtf8 :: CharSetP.CharSetEncoder m
     => IntSet.IntSet -> m (NonEmptyEnumStringSet.NonEmptyEnumStringSet Word8)
@@ -127,3 +83,89 @@ charSetToByteStringSetUtf8 is = foldM
                 in stringTails' c'
                     do x' : l
                     do n - 1
+
+complementPFromEnumStrings
+    :: NonEmptyEnumStringSet.NonEmptyEnumStringSet Word8 -> Tlex.Pattern Word8
+complementPFromEnumStrings ess0 = Tlex.orP
+        [ go [pr1es] []
+        , go [pr2es, seqes] [seqesP]
+        , go [pr3p1o1es, pr3p1o2es, seqes]
+            [ Tlex.straightEnumSetP pr3p1o1es
+            , Tlex.straightEnumSetP pr3p1o2es
+            , seqesP
+            ]
+        , go [pr3p2es, seqes, seqes]
+            [ Tlex.straightEnumSetP pr3p2es
+            , seqesP
+            , seqesP
+            ]
+        , go [pr3p3o1es, pr3p3o2es, seqes]
+            [ Tlex.straightEnumSetP pr3p3o1es
+            , Tlex.straightEnumSetP pr3p3o2es
+            , seqesP
+            ]
+        , go [pr3p4es, seqes, seqes]
+            [ Tlex.straightEnumSetP pr3p4es
+            , seqesP
+            , seqesP
+            ]
+        , go [pr4p1o1es, pr4p1o2es, seqes, seqes]
+            [ Tlex.straightEnumSetP pr4p1o1es
+            , Tlex.straightEnumSetP pr4p1o2es
+            , seqesP
+            , seqesP
+            ]
+        , go [pr4p2es, seqes, seqes, seqes]
+            [ Tlex.straightEnumSetP pr4p1o1es
+            , seqesP
+            , seqesP
+            , seqesP
+            ]
+        , go [pr4p3o1es, pr4p3o2es, seqes, seqes]
+            [ Tlex.straightEnumSetP pr4p3o1es
+            , Tlex.straightEnumSetP pr4p3o2es
+            , seqesP
+            , seqesP
+            ]
+        ]
+    where
+        seqes = EnumSet.fromList @Word8 [0x80..0xBF]
+        seqesP = Tlex.straightEnumSetP seqes
+
+        pr1es = EnumSet.fromList @Word8 [0x00..0x7F]
+        pr2es = EnumSet.fromList @Word8 [0xC2..0xDF]
+        pr3p1o1es = EnumSet.fromList @Word8 [0xE0]
+        pr3p1o2es = EnumSet.fromList @Word8 [0xA0..0xBF]
+        pr3p2es = EnumSet.fromList @Word8 [0xE1..0xEC]
+        pr3p3o1es = EnumSet.fromList @Word8 [0xED]
+        pr3p3o2es = EnumSet.fromList @Word8 [0x80..0x9F]
+        pr3p4es = EnumSet.fromList @Word8 [0xEE..0xEF]
+        pr4p1o1es = EnumSet.fromList @Word8 [0xF0]
+        pr4p1o2es = EnumSet.fromList @Word8 [0x90..0xBF]
+        pr4p2es = EnumSet.fromList @Word8 [0xF1..0xF3]
+        pr4p3o1es = EnumSet.fromList @Word8 [0xF4]
+        pr4p3o2es = EnumSet.fromList @Word8 [0x80..0x8F]
+
+        go bess restPs = go' bess restPs ess0
+
+        go' bess restPs ess = case bess of
+            []    -> mempty
+            [bes] -> Tlex.straightEnumSetP
+                do bes `EnumSet.difference` NonEmptyEnumStringSet.singleEnums ess
+            bes:bess2 ->
+                let mess = NonEmptyEnumStringSet.enumStrings ess
+                    (nes, ces) = EnumSet.partition
+                        do \be -> EnumMap.member be mess
+                        bes
+                    cesP = Tlex.straightEnumSetP ces <> mconcat restPs
+                in Tlex.orP do
+                    cesP:
+                        [ go' bess2 nrestPs ness
+                        | ne <- EnumSet.toList nes
+                        , let ness = case EnumMap.lookup ne mess of
+                                Just x  -> x
+                                Nothing -> error "unreachable"
+                        , let nrestPs = case restPs of
+                                []   -> []
+                                _:xs -> xs
+                        ]

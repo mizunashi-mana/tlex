@@ -61,7 +61,7 @@ anyoneP :: Enum e => Pattern.Pattern e
 anyoneP = Pattern.Range SymEnumSet.full
 
 maybeP :: Enum e => Pattern.Pattern e -> Pattern.Pattern e
-maybeP x = orP [Pattern.Empty, x]
+maybeP x = orP [x, Pattern.Epsilon]
 
 someP :: Enum e => Pattern.Pattern e -> Pattern.Pattern e
 someP x = x <> Pattern.Many x
@@ -72,5 +72,5 @@ manyP x = Pattern.Many x
 {-# INLINE orP #-}
 orP :: Enum e => [Pattern.Pattern e] -> Pattern.Pattern e
 orP = \case
-  []   -> Pattern.Empty
+  []   -> Pattern.Epsilon
   p:ps -> foldr (Pattern.:|:) p ps

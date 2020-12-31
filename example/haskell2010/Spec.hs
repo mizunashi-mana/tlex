@@ -46,7 +46,7 @@ main = hspec $ do
             Either.isLeft (lexByteString "\"x") `shouldBe` True
 
         it "be valid example.hs" $ do
-            program <- ByteString.readFile "input/example-uni.hs"
+            program <- ByteString.readFile "input/example.hs"
             Either.isRight (lexByteString program) `shouldBe` True
 
         it "be valid example-uni.hs" $ do
@@ -66,4 +66,73 @@ main = hspec $ do
                     SpannedToken {token = TokWhiteSpace, rawByteString = " ", tokenSpan = (60,1)},
                     SpannedToken {token = TokLitString "\"\xE6\x96\x87\xE5\xAD\x97\xE5\x88\x97\"", rawByteString = "\"\xE6\x96\x87\xE5\xAD\x97\xE5\x88\x97\"", tokenSpan = (61,11)},
                     SpannedToken {token = TokWhiteSpace, rawByteString = "\n", tokenSpan = (72,1)}
+                ]
+
+        it "be valid example-comment.hs" $ do
+            program <- ByteString.readFile "input/example-comment.hs"
+            lexByteString program `shouldBe` Right
+                [
+                    SpannedToken {token = TokOpenComment, rawByteString = "{-", tokenSpan = (0,2)},
+                    SpannedToken {token = TokEnclosedCommentChar " ", rawByteString = " ", tokenSpan = (2,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "a", rawByteString = "a", tokenSpan = (3,1)},
+                    SpannedToken {token = TokEnclosedCommentChar " ", rawByteString = " ", tokenSpan = (4,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "m", rawByteString = "m", tokenSpan = (5,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "u", rawByteString = "u", tokenSpan = (6,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "l", rawByteString = "l", tokenSpan = (7,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "t", rawByteString = "t", tokenSpan = (8,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "i", rawByteString = "i", tokenSpan = (9,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "l", rawByteString = "l", tokenSpan = (10,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "i", rawByteString = "i", tokenSpan = (11,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "n", rawByteString = "n", tokenSpan = (12,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "e", rawByteString = "e", tokenSpan = (13,1)},
+                    SpannedToken {token = TokEnclosedCommentChar " ", rawByteString = " ", tokenSpan = (14,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "c", rawByteString = "c", tokenSpan = (15,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "o", rawByteString = "o", tokenSpan = (16,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "m", rawByteString = "m", tokenSpan = (17,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "m", rawByteString = "m", tokenSpan = (18,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "e", rawByteString = "e", tokenSpan = (19,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "n", rawByteString = "n", tokenSpan = (20,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "t", rawByteString = "t", tokenSpan = (21,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "\n", rawByteString = "\n", tokenSpan = (22,1)},
+                    SpannedToken {token = TokOpenComment, rawByteString = "{-", tokenSpan = (23,2)},
+                    SpannedToken {token = TokEnclosedCommentChar "\n", rawByteString = "\n", tokenSpan = (25,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "a", rawByteString = "a", tokenSpan = (26,1)},
+                    SpannedToken {token = TokEnclosedCommentChar " ", rawByteString = " ", tokenSpan = (27,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "n", rawByteString = "n", tokenSpan = (28,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "e", rawByteString = "e", tokenSpan = (29,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "s", rawByteString = "s", tokenSpan = (30,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "t", rawByteString = "t", tokenSpan = (31,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "e", rawByteString = "e", tokenSpan = (32,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "d", rawByteString = "d", tokenSpan = (33,1)},
+                    SpannedToken {token = TokEnclosedCommentChar " ", rawByteString = " ", tokenSpan = (34,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "c", rawByteString = "c", tokenSpan = (35,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "o", rawByteString = "o", tokenSpan = (36,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "m", rawByteString = "m", tokenSpan = (37,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "m", rawByteString = "m", tokenSpan = (38,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "e", rawByteString = "e", tokenSpan = (39,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "n", rawByteString = "n", tokenSpan = (40,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "t", rawByteString = "t", tokenSpan = (41,1)},
+                    SpannedToken {token = TokEnclosedCommentChar "\n", rawByteString = "\n", tokenSpan = (42,1)},
+                    SpannedToken {token = TokCloseComment, rawByteString = "-}", tokenSpan = (43,2)},
+                    SpannedToken {token = TokEnclosedCommentChar "\n", rawByteString = "\n", tokenSpan = (45,1)},
+                    SpannedToken {token = TokCloseComment, rawByteString = "-}", tokenSpan = (46,2)},
+                    SpannedToken {token = TokWhiteSpace, rawByteString = "\n\n", tokenSpan = (48,2)},
+                    SpannedToken {token = TokQualifiedVarId "main", rawByteString = "main", tokenSpan = (50,4)},
+                    SpannedToken {token = TokWhiteSpace, rawByteString = " ", tokenSpan = (54,1)},
+                    SpannedToken {token = TokReservedOp "::", rawByteString = "::", tokenSpan = (55,2)},SpannedToken {token = TokWhiteSpace, rawByteString = " ", tokenSpan = (57,1)},
+                    SpannedToken {token = TokQualifiedConId "IO", rawByteString = "IO", tokenSpan = (58,2)},
+                    SpannedToken {token = TokWhiteSpace, rawByteString = " ", tokenSpan = (60,1)},
+                    SpannedToken {token = TokSpecial "(", rawByteString = "(", tokenSpan = (61,1)},
+                    SpannedToken {token = TokSpecial ")", rawByteString = ")", tokenSpan = (62,1)},
+                    SpannedToken {token = TokWhiteSpace, rawByteString = "\n", tokenSpan = (63,1)},
+                    SpannedToken {token = TokQualifiedVarId "main", rawByteString = "main", tokenSpan = (64,4)},
+                    SpannedToken {token = TokWhiteSpace, rawByteString = " ", tokenSpan = (68,1)},
+                    SpannedToken {token = TokReservedOp "=", rawByteString = "=", tokenSpan = (69,1)},
+                    SpannedToken {token = TokWhiteSpace, rawByteString = " ", tokenSpan = (70,1)},
+                    SpannedToken {token = TokQualifiedVarId "print", rawByteString = "print", tokenSpan = (71,5)},
+                    SpannedToken {token = TokWhiteSpace, rawByteString = " ", tokenSpan = (76,1)},
+                    SpannedToken {token = TokSpecial "(", rawByteString = "(", tokenSpan = (77,1)},
+                    SpannedToken {token = TokSpecial ")", rawByteString = ")", tokenSpan = (78,1)},
+                    SpannedToken {token = TokWhiteSpace, rawByteString = " ", tokenSpan = (79,1)},
+                    SpannedToken {token = TokLineComment "-- line comment\n", rawByteString = "-- line comment\n", tokenSpan = (80,16)}
                 ]

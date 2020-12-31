@@ -44,7 +44,7 @@ compareAcceptsByPriority :: Accept a -> Accept a -> Ordering
 compareAcceptsByPriority Accept{ accPriority = p1 } Accept{ accPriority = p2 } = p1 `compare` p2
 
 data Pattern e
-    = Empty
+    = Epsilon
     | Pattern e :^: Pattern e
     | Pattern e :|: Pattern e
     | Many (Pattern e)
@@ -55,7 +55,7 @@ instance Enum e => Semigroup (Pattern e) where
     (<>) = (:^:)
 
 instance Enum e => Monoid (Pattern e) where
-    mempty = Empty
+    mempty = Epsilon
 
 enumsP :: Enum e => [e] -> Pattern e
 enumsP l = straightEnumSetP do EnumSet.fromList l

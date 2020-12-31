@@ -7,6 +7,7 @@ module Language.Lexer.Tlex.Data.EnumMap (
     toAscList,
     toDescList,
     lookup,
+    member,
     insertOrUpdate,
     fromList,
     foldlWithKey',
@@ -53,6 +54,9 @@ toDescList (EnumMap m) = [ (toEnum i, x) | (i, x) <- IntMap.toDescList m ]
 
 lookup :: Enum k => k -> EnumMap k a -> Maybe a
 lookup k (EnumMap m) = IntMap.lookup (fromEnum k) m
+
+member :: Enum k => k -> EnumMap k a -> Bool
+member k (EnumMap m) = IntMap.member (fromEnum k) m
 
 insertOrUpdate :: Enum k => k -> a -> (a -> a) -> EnumMap k a -> EnumMap k a
 insertOrUpdate k ~dx ~uf (EnumMap m) =

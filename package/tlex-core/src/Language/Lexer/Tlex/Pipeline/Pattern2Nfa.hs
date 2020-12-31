@@ -17,7 +17,7 @@ pattern2Nfa
     -> NFA.NFABuilder m ()
 pattern2Nfa = go where
     go b e = \case
-        Pattern.Empty -> NFA.epsilonTrans b e
+        Pattern.Epsilon -> NFA.epsilonTrans b e
         Pattern.Range s -> NFA.condTrans b
             do
                 let (isStraight, es) = SymEnumSet.toEnumSet s

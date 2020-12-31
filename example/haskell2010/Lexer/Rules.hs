@@ -65,7 +65,8 @@ lexerRules = do
 
     initialRule commentP [||TokLineComment||]
 
-    initialRule openComP [||\_ -> TokOpenComment||]
+    -- openComP should be the head on nested comment mode to avoid conflicting.
+    TlexTH.thLexRule [Initial, NestedComment] openComP [||\_ -> TokOpenComment||]
     -- closeComP should be the head on nested comment mode to avoid conflicting.
     nestedCommentRule closeComP [||\_ -> TokCloseComment||]
     nestedCommentRule anyWithNewlineP [||TokEnclosedCommentChar||]
