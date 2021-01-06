@@ -95,7 +95,7 @@ common general
         tlex-core            >= 0.1.0 && < 0.2,
         tlex                 >= 0.1.0 && < 0.2,
         charset              >= 0.3.7 && < 0.4,
-        containers           >= 0.6.2 && < 0.7,
+        containers           >= 0.6.0 && < 0.7,
 
     autogen-modules:
         Paths_tlex_encoding

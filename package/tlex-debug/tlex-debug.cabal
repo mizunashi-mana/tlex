@@ -94,7 +94,7 @@ common general
         -- project depends
         tlex-core            >= 0.1.0 && < 0.2,
         tlex                 >= 0.1.0 && < 0.2,
-        containers           >= 0.6.2 && < 0.7,
+        containers           >= 0.6.0 && < 0.7,
         unordered-containers >= 0.2.13 && < 0.3,
 
     autogen-modules:
