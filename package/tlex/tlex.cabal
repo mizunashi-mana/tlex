@@ -88,11 +88,11 @@ common general
             -dcore-lint
 
     build-depends:
-        base,
+        base                 >= 4.12.0 && < 4.15,
 
         -- project depends
-        tlex-core,
-        containers,
+        tlex-core            >= 0.1.0 && < 0.2,
+        containers           >= 0.6.2 && < 0.7,
 
     autogen-modules:
         Paths_tlex
