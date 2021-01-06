@@ -15,6 +15,14 @@ bug-reports:         https://github.com/mizunashi-mana/tlex/issues
 synopsis:            TemplateHaskell plugin for Tlex
 description:
     Tlex is haskell libraries and toolchains for generating lexical analyzer.
+    See also: https://github.com/mizunashi-mana/tlex
+
+extra-source-files:
+    CHANGELOG.md
+
+source-repository head
+  type:     git
+  location: https://github.com/mizunashi-mana/tlex.git
 
 flag develop
     default:     False

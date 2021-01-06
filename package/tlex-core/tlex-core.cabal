@@ -15,6 +15,7 @@ bug-reports:         https://github.com/mizunashi-mana/tlex/issues
 synopsis:            A lexer generator
 description:
     Tlex is haskell libraries and toolchains for generating lexical analyzer.
+    See also: https://github.com/mizunashi-mana/tlex
 
 extra-source-files:
     CHANGELOG.md
