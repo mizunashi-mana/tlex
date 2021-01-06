@@ -10,9 +10,15 @@ jobs:
   build:
     strategy:
         matrix:
-            ghc: ['8.10.3']
-            cabal: ['3.2.0.0']
-            os: [ubuntu-latest, macOS-latest, windows-latest]
+            ghc: ['8.8.3', '8.10.3']
+            cabal: ['3.0.0.0', '3.2.0.0']
+            os: ubuntu-latest
+
+            include:
+                -
+                    ghc: 8.10.3
+                    cabal: 3.2.0.0
+                    os: [ubuntu-latest, macOS-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
 
