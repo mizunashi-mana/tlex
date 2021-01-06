@@ -12,7 +12,7 @@ jobs:
         matrix:
             ghc: ['8.8.3', '8.10.3']
             cabal: ['3.0.0.0', '3.2.0.0']
-            os: ubuntu-latest
+            os: [ubuntu-latest]
 
             include:
                 -
