@@ -8,15 +8,26 @@ on:
 
 jobs:
   build:
+    strategy:
+        matrix:
+            ghc: ['8.6.5', '8.8.3']
+            cabal: ['2.4.1.0', '3.0.0.0']
+            os: [ubuntu-latest, macOS-latest, windows-latest]
 
-    runs-on: ubuntu-latest
+            exclude:
+            # GHC 8.8+ only works with cabal v3+
+            -
+                ghc: 8.8.3
+                cabal: 2.4.1.0
+
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-haskell@v1
       with:
-        ghc-version: '8.8.2'
-        cabal-version: '3.0'
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: ${{ matrix.cabal }}
 
     - name: Cache
       uses: actions/cache@v1
@@ -37,4 +48,6 @@ jobs:
     - name: Build
       run: cabal build --flag develop --enable-tests --enable-benchmarks all
     - name: Run tests
-      run: cabal test all
+      run: |
+        cabal test all
+        cabal sdist all
