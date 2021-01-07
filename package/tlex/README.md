@@ -1,5 +1,7 @@
 # Tlex: A Generator for Lexical Analysers
 
+[![Hackage](https://img.shields.io/hackage/v/tlex.svg)](https://hackage.haskell.org/package/tlex)
+
 ## Installation
 
 Add dependencies on `package.cabal`:
