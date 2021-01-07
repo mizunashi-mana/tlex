@@ -8,7 +8,7 @@ CANDIDATE="${CANDIDATE:-"true"}"
 
 cd "$PROJECT_DIR"
 
-if [ -z "$@" ]; then
+if [ -z "$*" ]; then
     echo "Some items is needed." >&2
     exit 1
 fi
@@ -34,7 +34,7 @@ for item in "$@"; do
         cabal upload "$dist_file"
     else
         cabal upload --publish "$dist_file"
-        git tag "$dist_file"
+        git tag "$item"
         git push origin "$item"
     fi
 done
