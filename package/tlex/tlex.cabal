@@ -2,7 +2,7 @@ cabal-version:       3.0
 build-type:          Custom
 
 name:                tlex
-version:             0.1.0.0
+version:             0.2.0.0
 license:             Apache-2.0 OR MPL-2.0
 license-file:        LICENSE
 copyright:           (c) 2020 Mizunashi Mana
@@ -91,7 +91,7 @@ common general
         base                 >= 4.12.0 && < 4.15,
 
         -- project depends
-        tlex-core            >= 0.1.0 && < 0.2,
+        tlex-core            >= 0.1.0 && < 0.3,
         containers           >= 0.6.0 && < 0.7,
 
     autogen-modules:
@@ -117,6 +117,9 @@ library
         Language.Lexer.Tlex.Pipeline.Scanner2Nfa
         Language.Lexer.Tlex.Pipeline.Dfa2Runner
         Language.Lexer.Tlex.Data.InputString
+    reexported-modules:
+        tlex-core:Language.Lexer.Tlex.Data.EnumSet,
+        tlex-core:Language.Lexer.Tlex.Data.SymEnumSet
 
 test-suite doctest
     import:
