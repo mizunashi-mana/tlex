@@ -24,6 +24,12 @@ newtype EnumSet a = EnumSet IntSet.IntSet
 instance Hashable.Hashable (EnumSet a) where
     hashWithSalt s (EnumSet x) = Hashable.hashWithSalt s do IntSet.toAscList x
 
+instance Enum a => Semigroup (EnumSet a) where
+    (<>) = union
+
+instance Enum a => Monoid (EnumSet a) where
+    mempty = empty
+
 empty :: Enum a => EnumSet a
 empty = EnumSet IntSet.empty
 

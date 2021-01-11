@@ -22,6 +22,12 @@ data SymEnumSet a = SymEnumSet
     }
     deriving (Eq, Show)
 
+instance Enum a => Semigroup (SymEnumSet a) where
+    (<>) = union
+
+instance Enum a => Monoid (SymEnumSet a) where
+    mempty = empty
+
 empty :: Enum a => SymEnumSet a
 empty = SymEnumSet
     { isStraight = True
