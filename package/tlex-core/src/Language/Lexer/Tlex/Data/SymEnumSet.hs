@@ -4,6 +4,7 @@ module Language.Lexer.Tlex.Data.SymEnumSet (
     full,
     complement,
     singleton,
+    member,
     union,
     intersection,
     difference,
@@ -50,6 +51,15 @@ singleton x = SymEnumSet
     { isStraight = True
     , internalEnumSet = EnumSet.singleton x
     }
+
+member :: Enum a => a -> SymEnumSet a -> Bool
+member x s = case isStraight s of
+    True ->
+        EnumSet.member x
+            do internalEnumSet s
+    False -> not do
+        EnumSet.member x
+            do internalEnumSet s
 
 union :: Enum a => SymEnumSet a -> SymEnumSet a -> SymEnumSet a
 union s1 s2 = case isStraight s1 of
