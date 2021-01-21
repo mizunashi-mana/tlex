@@ -13,6 +13,9 @@ module Language.Lexer.Tlex.Output.TH (
     tlexArrayIndex,
     OutputContext (..),
     outputDfa,
+
+    -- for tests
+    addrCodeUnitsLE,
 ) where
 
 import           Language.Lexer.Tlex.Prelude
@@ -25,7 +28,6 @@ import qualified GHC.ST                            as ST
 import qualified GHC.Types                         as Types
 import qualified Language.Haskell.TH               as TH
 import qualified Language.Haskell.TH.Syntax        as TH
-import qualified Language.Lexer.Tlex.Data.Addr     as Addr
 import qualified Language.Lexer.Tlex.Data.Bits     as Bits
 import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
@@ -46,12 +48,17 @@ tlexLookupTlexTransTable :: Int -> TlexTransStateSize -> Prim.Addr#
 tlexLookupTlexTransTable offset unitSize table# s c =
     let !(Types.I# i#) = s `Bits.shiftL` offset + c
     in ST.runST
-        do ST.ST \s0# ->
-            let !(# s1#, r# #) = case unitSize of
-                    TlexTransStateSize8  -> Prim.readInt8OffAddr#  table# i# s0#
-                    TlexTransStateSize16 -> Prim.readInt16OffAddr# table# i# s0#
-                    TlexTransStateSize32 -> Prim.readInt32OffAddr# table# i# s0#
-            in (# s1#, Types.I# r# #)
+        do ST.ST \s0# -> case unitSize of
+            TlexTransStateSize8  -> case Prim.readWord8OffAddr# table# i# s0# of
+                (# s1#, r# #) -> case r# of
+                    255##   -> (# s1#, -1 #)
+                    _       -> (# s1#, Types.I# do Prim.word2Int# r# #)
+            TlexTransStateSize16 -> case Prim.readWord16OffAddr# table# i# s0# of
+                (# s1#, r# #) -> case r# of
+                    65535## -> (# s1#, -1 #)
+                    _       -> (# s1#, Types.I# do Prim.word2Int# r# #)
+            TlexTransStateSize32 -> case Prim.readInt32OffAddr# table# i# s0# of
+                (# s1#, r# #) -> (# s1#, Types.I# r# #)
 
 type TlexArray = Array.Array Int
 
@@ -192,8 +199,7 @@ outputTlexInitialFn DFA.DFA{ dfaInitials } fnName = do
 outputTlexTransFn :: DFA.DFA a -> (Int, Int) -> TH.Name -> TH.Q TH.Dec
 outputTlexTransFn DFA.DFA{ dfaTrans } (minUnitB, maxUnitB) fnName =
     let ubs = Bits.maxBitSize do maxUnitB - minUnitB
-        um =
-            do 1 `Bits.shiftL` ubs
+        um = do 1 `Bits.shiftL` ubs
             - 1
         l = concatMap
             do \dstState ->
@@ -207,7 +213,8 @@ outputTlexTransFn DFA.DFA{ dfaTrans } (minUnitB, maxUnitB) fnName =
                         Nothing -> smDef
                     [0..um]
             do toList dfaTrans
-        sbs = Bits.maxBitSize do length dfaTrans - 1
+        -- count of states + count of specials (i.e. -1)
+        sbs = Bits.maxBitSize do (length dfaTrans - 1) + 1
         sbsEnum = if
             | ubs + sbs > 29 -> error "exceed over bit size limited"
             | otherwise      -> stateSize sbs
@@ -239,9 +246,25 @@ outputTlexTransFn DFA.DFA{ dfaTrans } (minUnitB, maxUnitB) fnName =
                 do TH.LitE
                     do TH.StringPrimL
                         do concatMap
-                            do \sn -> Addr.addrCodeUnitsLE us
+                            do \sn -> addrCodeUnitsLE us
                                 do fromEnum sn
                             do l
+
+-- | Should correspond @tlexLookupTlexTransTable@
+addrCodeUnitsLE :: Bits.Bits a => Integral a => Int -> a -> [Word8]
+addrCodeUnitsLE us n
+    | n >= 0    = take us
+        do map
+            do \m -> fromInteger do toInteger do mod8bit m
+            do iterate (`Bits.shiftR` 8) n
+    | n == -1   = replicate us 0xFF
+    | otherwise = error "unsupported"
+    where
+        mod8bit = case Bits.bitSizeMaybe n of
+            Nothing -> \x -> x Bits..&. 0xFF
+            Just bs
+                | bs <= 8   -> \x -> x
+                | otherwise -> \x -> x Bits..&. 0xFF
 
 outputTlexAcceptFn
     :: DFA.DFA (TH.Q TH.Exp) -> (TH.Q TH.Type) -> TH.Name -> TH.Q TH.Dec

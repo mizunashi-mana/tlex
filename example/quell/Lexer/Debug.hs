@@ -22,9 +22,13 @@ tlexLexer = TlexTH.thScannerTlexScanner lexer
 nfa = NFA.buildNFA $ TlexPipeline.scanner2Nfa tlexLexer
 dfa = TlexPipeline.nfa2Dfa nfa
 minDfa = TlexPipeline.minDfa dfa
+lexerProgram :: IO String
 lexerProgram = do
     ast <- TH.runQ LexerRules.buildLexer
-    print $ TH.ppr ast
-outputMinDfaDot = do
+    pure $ show $ TH.ppr ast
+writeProgramToFile = do
+    ast <- TH.runQ LexerRules.buildLexer
+    writeFile "LexerTHOutput.hs" $ show $ TH.ppr ast
+writeMinDfaDotToFile = do
     let ast = TlexDebug.outputDfaToDot minDfa
     writeFile "sample.dot" do TlexDebug.outputAst ast

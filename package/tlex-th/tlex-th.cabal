@@ -121,7 +121,6 @@ library
 
         -- internals
         Language.Lexer.Tlex.Output.TH
-        Language.Lexer.Tlex.Data.Addr
         Language.Lexer.Tlex.Data.Bits
 
 test-suite doctest
