@@ -44,6 +44,7 @@ lexString input = go lctx0 id where
             (Tlex.TlexAccepted ctx act, _) ->
                 let consumed = Tlex.inputStringCtxPos ctx
                     consumedString = take consumed s
+                    -- Working in progress...
                     consumedToken = SpannedAction
                         { lexerAction = act
                         , rawCodeUnits = consumedString
