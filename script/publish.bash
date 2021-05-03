@@ -18,6 +18,11 @@ if ! git branch | grep '^* master$' >/dev/null; then
     exit 1
 fi
 
+if [ "$(git status --short | wc -l)" != "0" ]; then
+    echo "Not staged changes are available." >&2
+    exit 1
+fi
+
 for item in "$@"; do
     echo "Publishing $item"
 
