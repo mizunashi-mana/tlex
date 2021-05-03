@@ -13,14 +13,29 @@ if [ -z "$*" ]; then
     exit 1
 fi
 
-if ! git branch | grep '^* master$' >/dev/null; then
-    echo "Not on master branch" >&2
+if [ "$(git rev-parse --abbrev-ref HEAD)" != "master" ]; then
+    echo "Not on master branch." >&2
     exit 1
 fi
 
 if [ "$(git status --short | wc -l)" != "0" ]; then
     echo "Not staged changes are available." >&2
     exit 1
+fi
+
+git fetch origin master
+if [ -z "${FORCE_RELEASE:-}" ]; then
+    if [ \
+        "$(git show --format=format:%H -s origin/master)" \
+        != \
+        "$(git show --format=format:%H -s master)" \
+    ]; then
+        cat >&2 <<EOS
+You may forget to pull master changes.
+If you are ok, please rerun with FORCE_RELEASE environment.
+EOS
+        exit 1
+    fi
 fi
 
 for item in "$@"; do
