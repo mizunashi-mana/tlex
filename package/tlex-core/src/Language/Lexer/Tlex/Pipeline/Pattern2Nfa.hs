@@ -4,7 +4,7 @@ module Language.Lexer.Tlex.Pipeline.Pattern2Nfa (
 
 import           Language.Lexer.Tlex.Prelude
 
-import qualified Data.EnumSet    as EnumSet
+import qualified Data.EnumSet                        as EnumSet
 import qualified Language.Lexer.Tlex.Data.SymEnumSet as SymEnumSet
 import qualified Language.Lexer.Tlex.Machine.NFA     as NFA
 import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern

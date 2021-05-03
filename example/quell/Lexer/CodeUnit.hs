@@ -28,8 +28,8 @@ module Lexer.CodeUnit (
     catSpaceSeparator,
 ) where
 
-import qualified Data.Char          as Char
-import qualified Data.EnumSet       as EnumSet
+import qualified Data.Char    as Char
+import qualified Data.EnumSet as EnumSet
 
 
 type T = CodeUnit
@@ -174,29 +174,29 @@ data CodeUnit
 
 fromCharPoint :: Char -> Maybe CodeUnit
 fromCharPoint c = case fromChar c of
-    LcOtherCatCf  -> Nothing
-    LcOtherCatLl  -> Nothing
-    LcOtherCatLm  -> Nothing
-    LcOtherCatLo  -> Nothing
-    LcOtherCatLt  -> Nothing
-    LcOtherCatLu  -> Nothing
-    LcOtherCatM   -> Nothing
-    LcOtherCatNd  -> Nothing
-    LcOtherCatNl  -> Nothing
-    LcOtherCatNo  -> Nothing
-    LcOtherCatPc  -> Nothing
-    LcOtherCatPd  -> Nothing
-    LcOtherCatPe  -> Nothing
-    LcOtherCatPf  -> Nothing
-    LcOtherCatPi  -> Nothing
-    LcOtherCatPo  -> Nothing
-    LcOtherCatPs  -> Nothing
-    LcOtherCatS   -> Nothing
-    LcOtherCatZl  -> Nothing
-    LcOtherCatZp  -> Nothing
-    LcOtherCatZs  -> Nothing
-    LcOther       -> Nothing
-    lc            -> Just lc
+    LcOtherCatCf -> Nothing
+    LcOtherCatLl -> Nothing
+    LcOtherCatLm -> Nothing
+    LcOtherCatLo -> Nothing
+    LcOtherCatLt -> Nothing
+    LcOtherCatLu -> Nothing
+    LcOtherCatM  -> Nothing
+    LcOtherCatNd -> Nothing
+    LcOtherCatNl -> Nothing
+    LcOtherCatNo -> Nothing
+    LcOtherCatPc -> Nothing
+    LcOtherCatPd -> Nothing
+    LcOtherCatPe -> Nothing
+    LcOtherCatPf -> Nothing
+    LcOtherCatPi -> Nothing
+    LcOtherCatPo -> Nothing
+    LcOtherCatPs -> Nothing
+    LcOtherCatS  -> Nothing
+    LcOtherCatZl -> Nothing
+    LcOtherCatZp -> Nothing
+    LcOtherCatZs -> Nothing
+    LcOther      -> Nothing
+    lc           -> Just lc
 
 fromChar :: Char -> CodeUnit
 fromChar c = case fromEnum c of

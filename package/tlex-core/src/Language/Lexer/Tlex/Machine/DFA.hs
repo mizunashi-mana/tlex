@@ -12,9 +12,9 @@ module Language.Lexer.Tlex.Machine.DFA (
 
 import           Language.Lexer.Tlex.Prelude
 
+import qualified Data.EnumMap.Strict                 as EnumMap
 import qualified Data.IntMap                         as IntMap
 import qualified Data.List                           as List
-import qualified Data.EnumMap.Strict    as EnumMap
 import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern
 import qualified Language.Lexer.Tlex.Machine.State   as MState
 

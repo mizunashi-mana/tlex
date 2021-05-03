@@ -13,8 +13,8 @@ module Language.Lexer.Tlex.Machine.Pattern (
 
 import           Language.Lexer.Tlex.Prelude
 
+import qualified Data.EnumSet                        as EnumSet
 import qualified Data.Hashable                       as Hashable
-import qualified Data.EnumSet    as EnumSet
 import qualified Language.Lexer.Tlex.Data.SymEnumSet as SymEnumSet
 
 

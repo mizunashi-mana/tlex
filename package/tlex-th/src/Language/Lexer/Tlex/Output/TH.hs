@@ -22,6 +22,7 @@ import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.Array                        as Array
 import qualified Data.Bits                         as Bits
+import qualified Data.EnumMap.Strict               as EnumMap
 import qualified Data.IntMap.Strict                as IntMap
 import qualified GHC.Prim                          as Prim
 import qualified GHC.ST                            as ST
@@ -29,7 +30,6 @@ import qualified GHC.Types                         as Types
 import qualified Language.Haskell.TH               as TH
 import qualified Language.Haskell.TH.Syntax        as TH
 import qualified Language.Lexer.Tlex.Data.Bits     as Bits
-import qualified Data.EnumMap.Strict  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import           Language.Lexer.Tlex.Runner
@@ -51,8 +51,8 @@ tlexLookupTlexTransTable offset unitSize table# s c =
         do ST.ST \s0# -> case unitSize of
             TlexTransStateSize8  -> case Prim.readWord8OffAddr# table# i# s0# of
                 (# s1#, r# #) -> case r# of
-                    255##   -> (# s1#, -1 #)
-                    _       -> (# s1#, Types.I# do Prim.word2Int# r# #)
+                    255## -> (# s1#, -1 #)
+                    _     -> (# s1#, Types.I# do Prim.word2Int# r# #)
             TlexTransStateSize16 -> case Prim.readWord16OffAddr# table# i# s0# of
                 (# s1#, r# #) -> case r# of
                     65535## -> (# s1#, -1 #)

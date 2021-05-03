@@ -5,10 +5,10 @@ module Language.Lexer.Tlex.Plugin.Debug (
 
 import           Language.Lexer.Tlex.Prelude
 
+import qualified Data.EnumMap.Strict                       as EnumMap
 import qualified Data.HashMap.Strict                       as HashMap
 import qualified Data.IntMap.Strict                        as IntMap
 import qualified Data.IntSet                               as IntSet
-import qualified Data.EnumMap.Strict          as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA           as DFA
 import qualified Language.Lexer.Tlex.Machine.State         as MState
 import qualified Language.Lexer.Tlex.Plugin.Debug.Graphviz as Graphviz

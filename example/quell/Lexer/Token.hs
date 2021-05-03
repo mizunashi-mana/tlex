@@ -3,11 +3,11 @@ module Lexer.Token (
   Token (..),
 ) where
 
-import qualified GHC.Show                   as GHC
-import qualified Lexer.TextId as TextId
-import Data.Text (Text)
-import Data.ByteString (ByteString)
-import Data.Word (Word8)
+import           Data.ByteString (ByteString)
+import           Data.Text       (Text)
+import           Data.Word       (Word8)
+import qualified GHC.Show        as GHC
+import qualified Lexer.TextId    as TextId
 
 
 type T = Token

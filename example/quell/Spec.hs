@@ -1,11 +1,11 @@
 import           Lexer
 import           Test.Hspec
 
-import qualified Data.Either     as Either
-import           Lexer.TextId    (TextId (..))
-import           Lexer.Rules     (LexerAction (..), IdToken (..))
-import           Lexer.Token     (Token (..))
-import           Lexer.CodeUnit  (CodeUnit (..))
+import qualified Data.Either    as Either
+import           Lexer.CodeUnit (CodeUnit (..))
+import           Lexer.Rules    (IdToken (..), LexerAction (..))
+import           Lexer.TextId   (TextId (..))
+import           Lexer.Token    (Token (..))
 
 
 main :: IO ()

@@ -4,14 +4,14 @@
 
 module Lexer.Rules where
 
-import qualified Language.Haskell.TH                 as TH
-import qualified Language.Lexer.Tlex                 as Tlex
-import qualified Language.Lexer.Tlex.Plugin.TH       as TlexTH
-import qualified Lexer.TextId          as TextId
-import qualified Lexer.Token           as Token
-import qualified Lexer.CodeUnit       as CodeUnit
-import qualified Data.Text as Text
-import qualified Data.EnumSet    as EnumSet
+import qualified Data.EnumSet                  as EnumSet
+import qualified Data.Text                     as Text
+import qualified Language.Haskell.TH           as TH
+import qualified Language.Lexer.Tlex           as Tlex
+import qualified Language.Lexer.Tlex.Plugin.TH as TlexTH
+import qualified Lexer.CodeUnit                as CodeUnit
+import qualified Lexer.TextId                  as TextId
+import qualified Lexer.Token                   as Token
 
 
 type StringLit = String

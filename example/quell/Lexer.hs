@@ -6,23 +6,23 @@ module Lexer where
 import qualified Data.ByteString     as ByteString
 import qualified Data.Word           as Word
 import qualified Language.Lexer.Tlex as Tlex
+import qualified Lexer.CodeUnit      as CodeUnit
 import qualified Lexer.Rules         as Rules
 import qualified Lexer.Token         as Token
-import qualified Lexer.CodeUnit         as CodeUnit
 
 
 $(Rules.buildLexer)
 
 data SpannedAction = SpannedAction
-    { lexerAction   :: Rules.LexerAction
-    , rawCodeUnits  :: [CodeUnit.T]
-    , tokenSpan     :: (Int, Int)
+    { lexerAction  :: Rules.LexerAction
+    , rawCodeUnits :: [CodeUnit.T]
+    , tokenSpan    :: (Int, Int)
     }
     deriving (Eq, Show)
 
 data LexerContext = LexerContext
-    { currentPosition  :: Int
-    , restString       :: [CodeUnit.T]
+    { currentPosition :: Int
+    , restString      :: [CodeUnit.T]
     }
     deriving (Eq, Show)
 
