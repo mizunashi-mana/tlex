@@ -11,7 +11,7 @@ import qualified Lexer.TextId          as TextId
 import qualified Lexer.Token           as Token
 import qualified Lexer.CodeUnit       as CodeUnit
 import qualified Data.Text as Text
-import qualified Language.Lexer.Tlex.Data.EnumSet    as EnumSet
+import qualified Data.EnumSet    as EnumSet
 
 
 type StringLit = String

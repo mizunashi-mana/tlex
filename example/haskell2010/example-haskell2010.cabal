@@ -18,6 +18,7 @@ common general
         tlex-encoding,
         tlex-th,
         charset,
+        enummapset-th,
         template-haskell,
     other-modules:
         Lexer

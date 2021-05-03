@@ -6,8 +6,8 @@ import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.CharSet                                   as CharSet
 import qualified Data.IntSet                                    as IntSet
-import qualified Language.Lexer.Tlex.Data.EnumMap               as EnumMap
-import qualified Language.Lexer.Tlex.Data.EnumSet               as EnumSet
+import qualified Data.EnumMap.Strict               as EnumMap
+import qualified Data.EnumSet               as EnumSet
 import qualified Language.Lexer.Tlex.Data.NonEmptyEnumStringSet as NonEmptyEnumStringSet
 import qualified Language.Lexer.Tlex.Plugin.Encoding.CharSetP   as CharSetP
 import qualified Language.Lexer.Tlex.Syntax                     as Tlex

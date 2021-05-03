@@ -5,7 +5,7 @@ module Language.Lexer.Tlex.Pipeline.Scanner2Nfa (
 
 import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Lexer.Tlex.Data.EnumMap         as EnumMap
+import qualified Data.EnumMap.Strict         as EnumMap
 import qualified Language.Lexer.Tlex.Machine.NFA          as NFA
 import qualified Language.Lexer.Tlex.Machine.Pattern      as Pattern
 import qualified Language.Lexer.Tlex.Machine.State        as MState

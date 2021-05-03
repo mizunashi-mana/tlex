@@ -14,7 +14,7 @@ module Language.Lexer.Tlex.Data.SymEnumSet (
 
 import           Prelude
 
-import qualified Language.Lexer.Tlex.Data.EnumSet as EnumSet
+import qualified Data.EnumSet as EnumSet
 
 
 data SymEnumSet a = SymEnumSet

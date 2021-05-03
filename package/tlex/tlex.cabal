@@ -93,6 +93,7 @@ common general
         -- project depends
         tlex-core            >= 0.1.0 && < 0.3,
         containers           >= 0.6.0 && < 0.7,
+        enummapset-th        >= 0.6.0 && < 0.7,
 
     autogen-modules:
         Paths_tlex
@@ -117,9 +118,6 @@ library
         Language.Lexer.Tlex.Pipeline.Scanner2Nfa
         Language.Lexer.Tlex.Pipeline.Dfa2Runner
         Language.Lexer.Tlex.Data.InputString
-    reexported-modules:
-        tlex-core:Language.Lexer.Tlex.Data.EnumSet,
-        tlex-core:Language.Lexer.Tlex.Data.SymEnumSet
 
 test-suite doctest
     import:

@@ -28,8 +28,8 @@ module Lexer.CodeUnit (
     catSpaceSeparator,
 ) where
 
-import qualified Data.Char                        as Char
-import qualified Language.Lexer.Tlex.Data.EnumSet as EnumSet
+import qualified Data.Char          as Char
+import qualified Data.EnumSet       as EnumSet
 
 
 type T = CodeUnit

@@ -7,7 +7,7 @@ import           Language.Lexer.Tlex.Prelude
 import qualified Data.HashMap.Strict                 as HashMap
 import qualified Data.HashSet                        as HashSet
 import qualified Data.IntMap.Strict                  as IntMap
-import qualified Language.Lexer.Tlex.Data.EnumMap    as EnumMap
+import qualified Data.EnumMap.Strict    as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA     as DFA
 import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern
 import qualified Language.Lexer.Tlex.Machine.State   as MState

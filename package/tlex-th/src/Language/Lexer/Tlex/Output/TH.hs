@@ -29,7 +29,7 @@ import qualified GHC.Types                         as Types
 import qualified Language.Haskell.TH               as TH
 import qualified Language.Haskell.TH.Syntax        as TH
 import qualified Language.Lexer.Tlex.Data.Bits     as Bits
-import qualified Language.Lexer.Tlex.Data.EnumMap  as EnumMap
+import qualified Data.EnumMap.Strict  as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA   as DFA
 import qualified Language.Lexer.Tlex.Machine.State as MState
 import           Language.Lexer.Tlex.Runner

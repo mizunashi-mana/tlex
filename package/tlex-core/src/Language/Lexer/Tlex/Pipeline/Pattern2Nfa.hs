@@ -4,7 +4,7 @@ module Language.Lexer.Tlex.Pipeline.Pattern2Nfa (
 
 import           Language.Lexer.Tlex.Prelude
 
-import qualified Language.Lexer.Tlex.Data.EnumSet    as EnumSet
+import qualified Data.EnumSet    as EnumSet
 import qualified Language.Lexer.Tlex.Data.SymEnumSet as SymEnumSet
 import qualified Language.Lexer.Tlex.Machine.NFA     as NFA
 import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern
@@ -23,7 +23,7 @@ pattern2Nfa = go where
                 let (isStraight, es) = SymEnumSet.toEnumSet s
                 NFA.NFAStateTrans
                     { NFA.nstTransIsStraight = isStraight
-                    , NFA.nstTransRange = EnumSet.toIntSet es
+                    , NFA.nstTransRange = EnumSet.unEnumSet es
                     , NFA.nstTransNextState = e
                     }
         p1 Pattern.:^: p2 -> do

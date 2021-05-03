@@ -5,7 +5,7 @@ module Language.Lexer.Tlex.Pipeline.Dfa2Runner (
 import           Language.Lexer.Tlex.Prelude
 
 import qualified Data.IntMap                         as IntMap
-import qualified Language.Lexer.Tlex.Data.EnumMap    as EnumMap
+import qualified Data.EnumMap.Strict    as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA     as DFA
 import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern
 import qualified Language.Lexer.Tlex.Machine.State   as MState

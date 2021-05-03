@@ -26,6 +26,7 @@ common general
         tlex-encoding,
         tlex-th,
         charset,
+        enummapset-th,
         template-haskell,
     if flag(debug)
         build-depends:

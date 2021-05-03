@@ -12,8 +12,8 @@ module Language.Lexer.Tlex.Data.NonEmptyEnumStringSet (
 import           Prelude
 
 import qualified Data.List.NonEmpty               as NonEmpty
-import qualified Language.Lexer.Tlex.Data.EnumMap as EnumMap
-import qualified Language.Lexer.Tlex.Data.EnumSet as EnumSet
+import qualified Data.EnumMap.Strict as EnumMap
+import qualified Data.EnumSet as EnumSet
 
 
 data NonEmptyEnumStringSet a = NonEmptyEnumStringSet
@@ -45,9 +45,11 @@ insert :: Enum a
 insert (x NonEmpty.:| xs) s = case xs of
     [] -> insertSingleByte x s
     y:ys -> let xs' = y NonEmpty.:| ys in s
-        { enumStrings = EnumMap.insertOrUpdate x
-            do singleton xs'
-            do \xss -> insert xs' xss
+        { enumStrings = EnumMap.alter
+            do \case
+                Nothing     -> Just do singleton xs'
+                Just xss    -> Just do insert xs' xss
+            do x
             do enumStrings s
         }
 

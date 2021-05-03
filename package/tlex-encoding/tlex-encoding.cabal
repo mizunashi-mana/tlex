@@ -96,6 +96,7 @@ common general
         tlex                 >= 0.1.0 && < 0.3,
         charset              >= 0.3.7 && < 0.4,
         containers           >= 0.6.0 && < 0.7,
+        enummapset-th        >= 0.6.0 && < 0.7,
 
     autogen-modules:
         Paths_tlex_encoding

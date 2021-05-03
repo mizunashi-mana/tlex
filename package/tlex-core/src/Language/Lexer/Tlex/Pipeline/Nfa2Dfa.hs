@@ -7,7 +7,7 @@ import           Language.Lexer.Tlex.Prelude
 import qualified Data.HashMap.Strict                 as HashMap
 import qualified Data.IntMap.Strict                  as IntMap
 import qualified Data.IntSet                         as IntSet
-import qualified Language.Lexer.Tlex.Data.EnumMap    as EnumMap
+import qualified Data.EnumMap.Strict    as EnumMap
 import qualified Language.Lexer.Tlex.Machine.DFA     as DFA
 import qualified Language.Lexer.Tlex.Machine.NFA     as NFA
 import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern
@@ -132,9 +132,11 @@ nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
                 True ->
                     let ~newTrans = insertNfaSn nfaSn otherTrans0
                         trans1 = IntSet.foldl'
-                            do \trans c -> EnumMap.insertOrUpdate c
-                                do newTrans
-                                do \ss -> insertNfaSn nfaSn ss
+                            do \trans c -> EnumMap.alter
+                                do \case
+                                    Nothing -> Just newTrans
+                                    Just ss -> Just do insertNfaSn nfaSn ss
+                                do c
                                 do trans
                             do trans0
                             do cs
@@ -143,9 +145,11 @@ nfa2DfaM NFA.NFA{ nfaInitials, nfaTrans } = do
                     let (diffTrans1, trans1) = IntSet.foldl'
                                                 do \(diffTrans, trans) c ->
                                                     ( EnumMap.delete c diffTrans
-                                                    , EnumMap.insertOrUpdate c
-                                                        MState.emptySet
-                                                        id
+                                                    , EnumMap.alter
+                                                        do \case
+                                                            Nothing -> Just MState.emptySet
+                                                            Just ss -> Just ss
+                                                        c
                                                         trans
                                                     )
                                                 do (trans0, trans0)
