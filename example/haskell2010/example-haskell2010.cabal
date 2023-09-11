@@ -20,10 +20,16 @@ common general
         charset,
         enummapset,
         template-haskell,
+
+        -- for debug
+        -- tlex-core,
+        -- tlex-debug,
     other-modules:
         Lexer
-        -- Lexer.Debug
         Lexer.Rules
+
+        -- for debug
+        -- Lexer.Debug
 
 executable haskell2010-lexer
     import:
