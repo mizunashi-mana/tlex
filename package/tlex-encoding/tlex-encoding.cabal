@@ -7,7 +7,7 @@ license:             Apache-2.0 OR MPL-2.0
 license-file:        LICENSE
 copyright:           (c) 2021 Mizunashi Mana
 author:              Mizunashi Mana
-maintainer:          mizunashi-mana@noreply.git
+maintainer:          contact@mizunashi.work
 
 category:            Parsing
 homepage:            https://github.com/mizunashi-mana/tlex
