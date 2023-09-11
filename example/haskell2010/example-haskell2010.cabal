@@ -5,7 +5,7 @@ name:                example-haskell2010
 version:             0.1.0.0
 license:             Apache-2.0 OR MPL-2.0
 author:              Mizunashi Mana
-maintainer:          mizunashi-mana@noreply.git
+maintainer:          contact@mizunashi.work
 copyright:           (c) 2020 Mizunashi Mana
 
 common general
