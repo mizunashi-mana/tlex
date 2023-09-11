@@ -50,11 +50,11 @@ tlexLookupTlexTransTable offset unitSize table# s c =
     in ST.runST
         do ST.ST \s0# -> case unitSize of
             TlexTransStateSize8  -> case Prim.readWord8OffAddr# table# i# s0# of
-                (# s1#, r# #) -> case Prim.int8ToInt# do Prim.word8ToInt8# r# of
+                (# s1#, r# #) -> case Prim.word2Int# do Prim.word8ToWord# r# of
                     255# -> (# s1#, -1 #)
                     ri#  -> (# s1#, Types.I# ri# #)
             TlexTransStateSize16 -> case Prim.readWord16OffAddr# table# i# s0# of
-                (# s1#, r# #) -> case Prim.int16ToInt# do Prim.word16ToInt16# r# of
+                (# s1#, r# #) -> case Prim.word2Int# do Prim.word16ToWord# r# of
                     65535# -> (# s1#, -1 #)
                     ri#    -> (# s1#, Types.I# ri# #)
             TlexTransStateSize32 -> case Prim.readInt32OffAddr# table# i# s0# of
