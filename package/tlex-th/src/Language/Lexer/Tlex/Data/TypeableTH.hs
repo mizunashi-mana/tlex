@@ -27,7 +27,7 @@ tyConToType tyCon = TH.lookupTypeName tyConQualifiedName >>= \case
         Just n  -> pure do TH.ConT n
         Nothing -> case tyConName of
             "()" -> pure do TH.TupleT 0
-            _ -> fail do "Missing type: " ++ tyConQualifiedName
+            _    -> fail do "Missing type: " ++ tyConQualifiedName
     where
         tyConName = Typeable.tyConName tyCon
         tyConQualifiedName = Typeable.tyConModule tyCon ++ "." ++ tyConName
