@@ -23,7 +23,7 @@ pattern2Nfa = go where
                 let (isStraight, es) = SymEnumSet.toEnumSet s
                 NFA.NFAStateTrans
                     { NFA.nstTransIsStraight = isStraight
-                    , NFA.nstTransRange = EnumSet.unEnumSet es
+                    , NFA.nstTransRange = EnumSet.enumSetToIntSet es
                     , NFA.nstTransNextState = e
                     }
         p1 Pattern.:^: p2 -> do

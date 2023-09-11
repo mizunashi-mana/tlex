@@ -50,15 +50,15 @@ tlexLookupTlexTransTable offset unitSize table# s c =
     in ST.runST
         do ST.ST \s0# -> case unitSize of
             TlexTransStateSize8  -> case Prim.readWord8OffAddr# table# i# s0# of
-                (# s1#, r# #) -> case r# of
-                    255## -> (# s1#, -1 #)
-                    _     -> (# s1#, Types.I# do Prim.word2Int# r# #)
+                (# s1#, r# #) -> case Prim.int8ToInt# do Prim.word8ToInt8# r# of
+                    255# -> (# s1#, -1 #)
+                    ri#  -> (# s1#, Types.I# ri# #)
             TlexTransStateSize16 -> case Prim.readWord16OffAddr# table# i# s0# of
-                (# s1#, r# #) -> case r# of
-                    65535## -> (# s1#, -1 #)
-                    _       -> (# s1#, Types.I# do Prim.word2Int# r# #)
+                (# s1#, r# #) -> case Prim.int16ToInt# do Prim.word16ToInt16# r# of
+                    65535# -> (# s1#, -1 #)
+                    ri#    -> (# s1#, Types.I# ri# #)
             TlexTransStateSize32 -> case Prim.readInt32OffAddr# table# i# s0# of
-                (# s1#, r# #) -> (# s1#, Types.I# r# #)
+                (# s1#, r# #) -> (# s1#, Types.I# do Prim.int32ToInt# r# #)
 
 type TlexArray = Array.Array Int
 
@@ -260,11 +260,11 @@ addrCodeUnitsLE us n
     | n == -1   = replicate us 0xFF
     | otherwise = error "unsupported"
     where
-        mod8bit = case Bits.bitSizeMaybe n of
-            Nothing -> \x -> x Bits..&. 0xFF
+        mod8bit x = case Bits.bitSizeMaybe n of
+            Nothing -> x Bits..&. 0xFF
             Just bs
-                | bs <= 8   -> \x -> x
-                | otherwise -> \x -> x Bits..&. 0xFF
+                | bs <= 8   -> x
+                | otherwise -> x Bits..&. 0xFF
 
 outputTlexAcceptFn
     :: DFA.DFA (TH.Q TH.Exp) -> (TH.Q TH.Type) -> TH.Name -> TH.Q TH.Dec

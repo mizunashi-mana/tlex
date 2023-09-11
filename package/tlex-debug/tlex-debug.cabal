@@ -2,7 +2,7 @@ cabal-version:       3.0
 build-type:          Custom
 
 name:                tlex-debug
-version:             0.3.0.0
+version:             0.4.0.0
 license:             Apache-2.0 OR MPL-2.0
 license-file:        LICENSE
 copyright:           (c) 2021 Mizunashi Mana
@@ -89,14 +89,14 @@ common general
             -dcore-lint
 
     build-depends:
-        base                 >= 4.12.0  && < 4.15,
+        base                 >= 4.12.0  && < 5,
 
         -- project depends
-        tlex-core            >= 0.3.0   && < 0.4,
-        tlex                 >= 0.3.0   && < 0.4,
-        containers           >= 0.6.0   && < 0.7,
-        enummapset-th        >= 0.6.0   && < 0.7,
-        unordered-containers >= 0.2.13  && < 0.3,
+        tlex-core            >= 0.4.0   && < 0.5,
+        tlex                 >= 0.4.0   && < 0.5,
+        containers           >= 0.6.0   && < 1,
+        enummapset           >= 0.7.1   && < 1,
+        unordered-containers >= 0.2.13  && < 1,
 
     autogen-modules:
         Paths_tlex_debug

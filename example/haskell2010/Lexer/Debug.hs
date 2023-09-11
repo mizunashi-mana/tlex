@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Lexer.Debug where
 
 import qualified Language.Haskell.TH                      as TH

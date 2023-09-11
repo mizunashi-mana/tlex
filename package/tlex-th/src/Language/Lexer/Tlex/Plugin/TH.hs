@@ -88,8 +88,8 @@ liftTlexScannerBuilder builder = do
             }
     pure x
 
-thLexRule :: Enum e => Enum s => [s] -> Tlex.Pattern e -> TH.Q (TH.TExp a) -> THScannerBuilder s e a ()
-thLexRule ss p act = liftTlexScannerBuilder do Tlex.lexRule ss p do TH.unType <$> act
+thLexRule :: Enum e => Enum s => [s] -> Tlex.Pattern e -> TH.Code TH.Q a -> THScannerBuilder s e a ()
+thLexRule ss p act = liftTlexScannerBuilder do Tlex.lexRule ss p do TH.unTypeCode act
 
 
 outputScanner :: Enum e => THScanner e -> TH.Q [TH.Dec]
