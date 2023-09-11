@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 module Lexer.Rules where
 
@@ -26,10 +26,10 @@ type LexerCodeUnit = Word.Word8
 type ScannerBuilder = TlexTH.THScannerBuilder LexerState LexerCodeUnit LexerAction
 type Pattern = Tlex.Pattern LexerCodeUnit
 
-initialRule :: Pattern -> TH.Q (TH.TExp LexerAction) -> ScannerBuilder ()
+initialRule :: Pattern -> TH.Code TH.Q LexerAction -> ScannerBuilder ()
 initialRule = TlexTH.thLexRule [Initial]
 
-nestedCommentRule :: Pattern -> TH.Q (TH.TExp LexerAction) -> ScannerBuilder ()
+nestedCommentRule :: Pattern -> TH.Code TH.Q LexerAction -> ScannerBuilder ()
 nestedCommentRule = TlexTH.thLexRule [NestedComment]
 
 buildLexer :: TH.Q [TH.Dec]

@@ -42,6 +42,11 @@ instance Applicative (Reporter e) where
         , getResult = getResult mf do getResult mx
         }
 
+    mx *> my = Reporter
+        { getReportBag = getReportBag mx <> getReportBag my
+        , getResult = getResult my
+        }
+
 instance Monad (Reporter e) where
     mx >>= f =
         let my = f do getResult mx
@@ -49,8 +54,3 @@ instance Monad (Reporter e) where
             { getReportBag = getReportBag mx <> getReportBag my
             , getResult = getResult my
             }
-
-    mx >> my = Reporter
-        { getReportBag = getReportBag mx <> getReportBag my
-        , getResult = getResult my
-        }

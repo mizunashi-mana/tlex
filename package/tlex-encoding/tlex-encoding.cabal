@@ -89,14 +89,14 @@ common general
             -dcore-lint
 
     build-depends:
-        base                 >= 4.12.0 && < 4.15,
+        base                 >= 4.12.0 && < 5,
 
         -- project depends
         tlex-core            >= 0.3.0 && < 0.4,
         tlex                 >= 0.3.0 && < 0.4,
-        charset              >= 0.3.7 && < 0.4,
-        containers           >= 0.6.0 && < 0.7,
-        enummapset-th        >= 0.6.0 && < 0.7,
+        charset              >= 0.3.7 && < 1,
+        containers           >= 0.6.0 && < 1,
+        enummapset           >= 0.7.1 && < 1,
 
     autogen-modules:
         Paths_tlex_encoding

@@ -18,12 +18,18 @@ common general
         tlex-encoding,
         tlex-th,
         charset,
-        enummapset-th,
+        enummapset,
         template-haskell,
+
+        -- for debug
+        tlex-core,
+        tlex-debug,
     other-modules:
         Lexer
-        -- Lexer.Debug
         Lexer.Rules
+
+        -- for debug
+        Lexer.Debug
 
 executable small-lang-lexer
     import:

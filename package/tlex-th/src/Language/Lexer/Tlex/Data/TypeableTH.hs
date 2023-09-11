@@ -20,20 +20,14 @@ liftTypeFromTypeable p = go do Typeable.typeRep p where
             do tyConToType tyCon
             do [ go r | r <- rs ]
 
--- |
---
--- TODO: correct reifying
--- NOTICE: introduce @reifyType@ by GHC 8.10
---
 tyConToType :: Typeable.TyCon -> TH.Q TH.Type
-tyConToType tyCon = do
-    mn <- TH.lookupTypeName tyConQualifiedName
-    case mn of
+tyConToType tyCon = TH.lookupTypeName tyConQualifiedName >>= \case
+    Just n  -> pure do TH.ConT n
+    Nothing -> TH.lookupTypeName tyConName >>= \case
         Just n  -> pure do TH.ConT n
-        Nothing -> case tyConQualifiedName of
-            "GHC.Tuple.()" ->
-                pure do TH.TupleT 0
-            _  ->
-                fail do "Missing type: " ++ tyConQualifiedName
+        Nothing -> case tyConName of
+            "()" -> pure do TH.TupleT 0
+            _ -> fail do "Missing type: " ++ tyConQualifiedName
     where
-        tyConQualifiedName = Typeable.tyConModule tyCon ++ "." ++ Typeable.tyConName tyCon
+        tyConName = Typeable.tyConName tyCon
+        tyConQualifiedName = Typeable.tyConModule tyCon ++ "." ++ tyConName
