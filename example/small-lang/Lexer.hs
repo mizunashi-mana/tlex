@@ -15,7 +15,7 @@ lexByteString :: ByteString.ByteString -> Either String [ByteString.ByteString]
 lexByteString input = go (ByteString.unpack input) id where
     go s acc = case Tlex.runInputString (tlexScan ()) s of
         (Tlex.TlexEndOfInput, _)      -> Right $ acc []
-        (Tlex.TlexError, ctx)         -> Left $ show (ctx, acc [])
+        (Tlex.TlexNotAccepted, ctx)         -> Left $ show (ctx, acc [])
         (Tlex.TlexAccepted ctx (), _) ->
             let rest = Tlex.inputStringCtxRest ctx
                 consumed = Tlex.inputStringCtxPos ctx

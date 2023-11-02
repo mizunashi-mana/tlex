@@ -41,8 +41,8 @@ lexByteString input = go lctx0 id where
         let istate = initialState lctx
             s = restString lctx
         in case Tlex.runInputString (tlexScan istate) s of
-            (Tlex.TlexEndOfInput, _)      -> Right $ acc []
-            (Tlex.TlexError, ctx)         -> Left $ show (ctx, acc [])
+            (Tlex.TlexEndOfInput, _)       -> Right $ acc []
+            (Tlex.TlexNotAccepted, ctx)    -> Left $ show (ctx, acc [])
             (Tlex.TlexAccepted ctx act, _) ->
                 let consumed = Tlex.inputStringCtxPos ctx
                     consumedString = ByteString.pack $ take consumed s

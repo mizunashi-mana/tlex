@@ -101,8 +101,8 @@ instance TlexContext Int Word8 InputByteString where
 lexByteString :: ByteString.ByteString -> Maybe [ByteString.ByteString]
 lexByteString s0 = go s0 id where
     go s acc = case runInputByteString (tlexScan ()) s of
-        (TlexEndOfInput, _)            -> Just $ acc []
-        (TlexError, _)                 -> Nothing
+        (TlexEndOfInput, _)     -> Just $ acc []
+        (TlexNotAccepted, _)    -> Nothing
         (TlexAccepted n act, _) ->
             let (consumed, rest) = splitAt n s
                 token = act consumed

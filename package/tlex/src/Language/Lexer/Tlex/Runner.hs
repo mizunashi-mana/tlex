@@ -18,7 +18,7 @@ class (Enum unit, Monad m) => TlexContext mark unit m | m -> mark, m -> unit whe
 data TlexResult mark action
     = TlexEndOfInput
     -- ^ No more inputs.
-    | TlexError
+    | TlexNotAccepted
     -- ^ Some inputs are available, but not accepted.
     | TlexAccepted mark action
     -- ^ Accepted with a end position and an action.
@@ -72,5 +72,5 @@ runRunner runner s0 = case tlexInitial runner do fromEnum s0 of
             pure do TlexAccepted m x
 
         goEnd preAccepted = case preAccepted of
-            Nothing  -> pure TlexError
+            Nothing  -> pure TlexNotAccepted
             Just acc -> pure acc
