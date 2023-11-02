@@ -8,28 +8,35 @@ module Language.Lexer.Tlex.Runner (
 import           Language.Lexer.Tlex.Prelude
 
 
-class (Enum e, Monad m) => TlexContext p e m | m -> p, m -> e where
-    tlexGetInputPart :: m (Maybe e)
-    tlexGetMark :: m p
+class (Enum unit, Monad m) => TlexContext mark unit m | m -> mark, m -> unit where
+    -- | Get a unit of current position from input, and move to next position.
+    tlexGetInputPart :: m (Maybe unit)
 
-data TlexResult p a
+    -- | Get a mark of current position.
+    tlexGetMark :: m mark
+
+data TlexResult mark action
     = TlexEndOfInput
+    -- ^ No more inputs.
     | TlexError
-    | TlexAccepted p a
+    -- ^ Some inputs are available, but not accepted.
+    | TlexAccepted mark action
+    -- ^ Accepted with a end position and an action.
     deriving (Eq, Show)
 
 
-data Runner e a = Runner
+data Runner unit action = Runner
     { tlexInitial :: Int -> Int
     -- ^ StartState -> (StateNum | -1)
-    , tlexAccept  :: Int -> Maybe a
+    , tlexAccept  :: Int -> Maybe action
     -- ^ StateNum -> Maybe Action
     , tlexTrans   :: Int -> Int -> Int
     -- ^ StateNum -> CodeUnit -> (StateNum | -1)
     }
     deriving Functor
 
-runRunner :: Enum s => TlexContext p c m => Runner c a -> s -> m (TlexResult p a)
+runRunner :: Enum state => TlexContext mark unit m
+    => Runner unit action -> state -> m (TlexResult mark action)
 runRunner runner s0 = case tlexInitial runner do fromEnum s0 of
         -1 -> error "unknown initial state"
         s  -> go s

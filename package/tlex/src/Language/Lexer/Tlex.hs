@@ -17,7 +17,7 @@ import qualified Language.Lexer.Tlex.Pipeline.Nfa2Dfa     as TlexPipeline
 import qualified Language.Lexer.Tlex.Pipeline.Scanner2Nfa as TlexPipeline
 
 
-buildRunner :: Enum e => Scanner e a -> Runner e a
+buildRunner :: Enum unit => Scanner unit action -> Runner unit action
 buildRunner scanner =
     let nfa = NFA.buildNFA do TlexPipeline.scanner2Nfa scanner
         dfa = TlexPipeline.nfa2Dfa nfa

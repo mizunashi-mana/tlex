@@ -24,53 +24,59 @@ import qualified Language.Lexer.Tlex.Data.SymEnumSet as SymEnumSet
 import qualified Language.Lexer.Tlex.Machine.Pattern as Pattern
 
 
-newtype Scanner e a = Scanner
-    { scannerRules :: [ScanRule e a]
+newtype Scanner unit action = Scanner
+    { scannerRules :: [ScanRule unit action]
     }
     deriving (Eq, Show, Functor)
 
-data ScanRule e a = ScanRule
+data ScanRule unit action = ScanRule
     { scanRuleStartStates    :: [Pattern.StartState]
-    , scanRulePattern        :: Pattern.Pattern e
-    , scanRuleSemanticAction :: a
+    , scanRulePattern        :: Pattern.Pattern unit
+    , scanRuleSemanticAction :: action
     }
     deriving (Eq, Show, Functor)
 
 
-buildScanner :: Enum e => ScannerBuilder s e f () -> Scanner e f
+buildScanner :: Enum unit
+    => ScannerBuilder state unit action () -> Scanner unit action
 buildScanner builder = Scanner
     { scannerRules = unScannerBuilderContext
         do execState builder do ScannerBuilderContext []
     }
 
-newtype ScannerBuilderContext s e f = ScannerBuilderContext
-    { unScannerBuilderContext :: [ScanRule e f]
+newtype ScannerBuilderContext state unit action = ScannerBuilderContext
+    { unScannerBuilderContext :: [ScanRule unit action]
     }
     deriving (Eq, Show, Functor)
 
-type ScannerBuilder s e f = State (ScannerBuilderContext s e f)
+type ScannerBuilder state unit action = State (ScannerBuilderContext state unit action)
 
-lexRule :: Enum s => Enum e
-    => [s] -> Pattern.Pattern e -> f -> ScannerBuilder s e f ()
+lexRule :: Enum state => Enum unit
+    => [state] -> Pattern.Pattern unit -> action -> ScannerBuilder state unit action ()
 lexRule ss p act = modify' \(ScannerBuilderContext rs0) ->
     ScannerBuilderContext
         do ScanRule [Pattern.startStateFromEnum s | s <- ss] p act:rs0
 
 
-anyoneP :: Enum e => Pattern.Pattern e
+-- | Wildcard pattern which accepts an any unit.
+anyoneP :: Enum unit => Pattern.Pattern unit
 anyoneP = Pattern.Range SymEnumSet.full
 
-maybeP :: Enum e => Pattern.Pattern e -> Pattern.Pattern e
+-- | Maybe pattern which accepts given pattern or nothing.
+maybeP :: Enum unit => Pattern.Pattern unit -> Pattern.Pattern unit
 maybeP x = orP [x, Pattern.Epsilon]
 
-someP :: Enum e => Pattern.Pattern e -> Pattern.Pattern e
+-- | Some pattern which accepts one given pattern or more times.
+someP :: Enum unit => Pattern.Pattern unit -> Pattern.Pattern unit
 someP x = x <> Pattern.Many x
 
-manyP :: Enum e => Pattern.Pattern e -> Pattern.Pattern e
+-- | Many pattern which accepts nothing or given pattern more times.
+manyP :: Enum unit => Pattern.Pattern unit -> Pattern.Pattern unit
 manyP x = Pattern.Many x
 
-{-# INLINE orP #-}
-orP :: Enum e => [Pattern.Pattern e] -> Pattern.Pattern e
+-- | Or pattern which accepts one of given patterns.
+orP :: Enum unit => [Pattern.Pattern unit] -> Pattern.Pattern unit
 orP = \case
   []   -> Pattern.Epsilon
   p:ps -> foldr (Pattern.:|:) p ps
+{-# INLINE orP #-}
